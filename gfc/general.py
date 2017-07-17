@@ -32,9 +32,6 @@ from astropy import table
 
 from time import time
 
-class GFC_Exception(Exception):
-    pass
-
 radiantomas = 180. * 3600. * 1000. / np.pi
 
 ICRS_to_galactic = coords.CoordinateTransformation(coords.Transformations.ICRS2GAL)
@@ -52,10 +49,10 @@ def XD_arr(t, *cols):
 def XD(y, e, amplitudes, means, covariances, *args, **kwargs):
 
     if y.shape != e.shape[:2]:
-        raise GFC_Exception("gaia_fc.general.XD: dimensions of y and e do not match: {0} and {1}".format(y.shape, e.shape))
+        raise Exception("gaia_fc.general.XD: dimensions of y and e do not match: {0} and {1}".format(y.shape, e.shape))
 
     if not (len(means) == len(covariances) == len(amplitudes)):
-        raise GFC_Exception("gaia_fc.general.XD: lengths of initial amplitudes ({0}), means ({1}) and amplitudes ({2}) do not match.".format(len(amplitudes), len(means), len(covariances)))
+        raise Exception("gaia_fc.general.XD: lengths of initial amplitudes ({0}), means ({1}) and amplitudes ({2}) do not match.".format(len(amplitudes), len(means), len(covariances)))
 
     a = np.asfortranarray(amplitudes)
     a = a / np.sum(a)
@@ -204,7 +201,7 @@ def radial_velocity_best_estimate(ra, dec, plx, mura, mudec, C, PDFs, x = np.ara
     elif which.lower() == "b":
         best = (x[marginalised.argmax()], x[conditional.argmax()])
     else:
-        raise GFC_Exception("gaia_fc.general.radial_velocity_best_estimate: unrecognised value for keyword `which`: `{0}`".format(which))
+        raise Exception("gaia_fc.general.radial_velocity_best_estimate: unrecognised value for keyword `which`: `{0}`".format(which))
     return best
 
 def add_column_attribute(t, col, attr, val):
@@ -269,13 +266,17 @@ def rse(x):
 
     Parameters
     ----------
-    x - Array of input values.
+    x: array-like
+        Array of input values.
 
     Returns
     -------
+    rse: float
+        RSE value
 
     The Robust Scatter Estimate (RSE), defined as 0.390152 * (P90-P10),
     where P10 and P90 are the 10th and 90th percentile of the distribution
     of x.
     """
-    return 0.390152*(scoreatpercentile(x,90)-scoreatpercentile(x,10))
+    rse = 0.390152*(scoreatpercentile(x,90)-scoreatpercentile(x,10))
+    return rse
