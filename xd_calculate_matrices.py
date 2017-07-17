@@ -4,15 +4,20 @@ Run this script to do it once so it doesn't have to be re-done every time (can b
 """
 
 import gfc
-from sys import argv
-data_file = argv[1]
-write_to = argv[2] # Should be a folder
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("data_file", help = "File containing TGAS data")
+parser.add_argument("save_folder", help = "Folder in which results will be saved")
+parser.add_argument("-v", "--verbose", action = "store_true")
+args = parser.parse_args()
 
-print "Now reading data..."
-t = gfc.io.read_csv(data_file) # ASSUME CSV -- todo: check
-print "{0} lines in data".format(len(t))
-print "Data contains the following keys:"
-print t.keys()
+if args.verbose:
+    print "Now reading data..."
+t = gfc.io.read_csv(args.data_file) # ASSUME CSV -- todo: check
+if args.verbose:
+    print "{0} lines in data".format(len(t))
+    print "Data contains the following keys:"
+    print t.keys()
 
 ra_rad = gfc.radians(t["ra"]) ; ra_rad.name = "ra_rad"
 de_rad = gfc.radians(t["dec"]); de_rad.name = "dec_rad"
@@ -26,24 +31,31 @@ t.remove_columns(["solution_id", "random_index", "astrometric_n_obs_al", "astrom
                   "matched_observations", "duplicated_source", "scan_direction_strength_k1", "scan_direction_strength_k2", \
                   "scan_direction_strength_k3", "scan_direction_strength_k4", "scan_direction_mean_k1", "scan_direction_mean_k2", \
                   "scan_direction_mean_k3", "scan_direction_mean_k4", "phot_g_n_obs", "phot_g_mean_flux", "phot_g_mean_flux_error"])
-print "Read TGAS data"
+if args.verbose:
+    print "Read TGAS data"
 
 gfc.tgas.add_w(t)
-print "Added w"
+if args.verbose:
+    print "Added w"
 
 gfc.tgas.add_A(t)
-print "Added A"
+if args.verbose:
+    print "Added A"
 
 gfc.tgas.add_R(t)
-print "Added R and R^-1"
+if args.verbose:
+    print "Added R and R^-1"
 
 gfc.tgas.add_C(t)
-print "Added C"
+if args.verbose:
+    print "Added C"
 
 gfc.tgas.add_Q(t)
-print "Added Q"
+if args.verbose:
+    print "Added Q"
 
 gfc.tgas.add_S(t)
-print "Added S"
+if args.verbose:
+    print "Added S"
 
-gfc.io.write_table_with_separate_arrays(t, saveto_folder = write_to)
+gfc.io.write_table_with_separate_arrays(t, saveto_folder = args.save_folder)
