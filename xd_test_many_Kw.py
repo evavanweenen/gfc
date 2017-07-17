@@ -60,5 +60,5 @@ for K in Krange:
         f = "{f}/w_{w}/K_{K}".format(f = args.save_folder, w = w, K = K)
         print "K = {0} ; w = {1}".format(K, w)
         amps_xd, means_xd, covs_xd, L = gfc.XD(warr, wcov, initial_amps[:K], initial_means[:K], initial_covs[:K], projection = proj, w = w)
-        print >> open(f+"/L", 'w'), L
+        print >> open("{0}/L".format(f), 'w'), L
         gfc.io.save_PDFs(amps_xd, means_xd, covs_xd, f)
