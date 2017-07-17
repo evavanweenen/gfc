@@ -1,39 +1,43 @@
 from astropy import table, units
 from astroquery.simbad import Simbad
-from astropy.io.ascii import read
+from astropy.io.ascii import read as read_ascii
 from astropy.io import votable
-
 import os
-
 from glob import glob
-
 from sys import stdout
-
 from numpy import save, load
-
-class GFC_Exception(Exception):
-    pass
-
-def fetch_v_r_from_simbad(name):
-    try:
-        Simbad.add_votable_fields("rvz_radvel", "rvz_error")
-    except KeyError:
-        pass # already present in query
-
-    res = Simbad.query_object(name)
-
-    if res is None:
-        raise GFC_Exception("gaia_fc.io.fetch_v_r_from_simbad: Cannot fetch v_r from SIMBAD for object {0}".format(name))
-
-    v_r, v_r_err = res["RVZ_RADVEL"][0], res["RVZ_ERROR"][0]
-
-    return v_r, v_r_err
 
 def clear():
     _ = os.system("clear"); del _
 
 def flush():
     stdout.flush()
+
+def fetch_v_r_from_simbad(object_name):
+    """
+    Fetch an observed radial velocity from SIMBAD
+    
+    Parameters
+    ----------
+    object_name: str
+        Name of the object to query SIMBAD for
+
+    Returns
+    -------
+    v_r: float
+        Observed radial velocity, in km/s
+    v_r_err: float
+        Error in observed radial velocity, in km/s
+    """
+    try:
+        Simbad.add_votable_fields("rvz_radvel", "rvz_error")
+    except KeyError:
+        pass # already present in query
+    res = Simbad.query_object(object_name)
+    if res is None:
+        raise Exception("Cannot fetch radial velocity from SIMBAD for object {0}".format(object_name))
+    v_r, v_r_err = res["RVZ_RADVEL"][0], res["RVZ_ERROR"][0]
+    return v_r, v_r_err
 
 def read_votable(*args, **kwargs):
     data = votable.parse(*args, **kwargs)
