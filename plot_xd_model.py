@@ -8,14 +8,10 @@ from matplotlib import pyplot as plt
 from matplotlib import gridspec as gs
 from matplotlib.patches import Ellipse
 import matplotlib as mpl
-mpl.rcParams.update(mpl.rcParamsDefault)
 
 from scipy.stats import chi2
 
 import numpy as np
-
-#K = int(argv[1]); w = float(argv[2])
-K = 19 ; w = 9.0
 
 volume = 0.6827
 
@@ -71,7 +67,6 @@ def set_axes(ax1, ax2, ax3):
     ax1.set_xticks((-100, -50, 0, 50, 100))
     ax1.set_yticks((-100, -50, 0, 50))
 
-print "\nDoing Gaia"
 f = "tgas/2MASS/XD_K_w/w_{w}/K_{K}/".format(w = w, K = K)
 amps_xd = g.np.load(f+"amplitudes.npy")
 means_xd = g.np.load(f+"means.npy")
@@ -96,33 +91,6 @@ text(ax1)
 
 f.savefig("PDFs_gaia.png")
 plt.close(f)
-
-lists = [["Sirius", 14, 16], ["Pleiades", 9, 5], ["Hercules", 2], ["Background", 0, 1, 15]]
-
-for l in lists:
-    f = plt.figure(figsize=(8,8), tight_layout = True)
-
-    plt.suptitle("  ")
-    gs1 = gs.GridSpec(3, 4)
-    gs1.update(left=0.1, right=0.9, wspace=0.05)
-    ax1 = plt.subplot(gs1[:-1, :])
-    ax2 = plt.subplot(gs1[-1, :2])
-    ax3 = plt.subplot(gs1[-1, 2:])
-    set_axes(ax1, ax2, ax3)
-
-    for a, m, c in zip(amps_xd, means_xd, covs_xd):
-        draw_PDF_ellipse(ax1, a, m, c, "xy", edgecolor="0.85")
-        draw_PDF_ellipse(ax2, a, m, c, "xz", edgecolor="0.85")
-        draw_PDF_ellipse(ax3, a, m, c, "yz", edgecolor="0.85")
-    for i in l[1:]:
-        draw_PDF_ellipse(ax1, amps_xd[i], means_xd[i], covs_xd[i], "xy")
-        draw_PDF_ellipse(ax2, amps_xd[i], means_xd[i], covs_xd[i], "xz")
-        draw_PDF_ellipse(ax3, amps_xd[i], means_xd[i], covs_xd[i], "yz")
-    f.savefig("PDFS_{0}.png".format(l[0]))
-    plt.close(f)
-
-
-print " - Components plotted"
 
 PDFs = map(g.pdf.multivariate, means_xd, covs_xd, amps_xd)
 evalxyz = g.pdf.eval_total_PDF(PDFs, [(-140,140), (-130,130), (-72,72)])
