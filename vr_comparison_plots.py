@@ -52,31 +52,6 @@ axs[1].set_title("Mean: {mean:.1f} ; Median: {median:.1f} $\sigma$".format(mean 
 print "Fraction of stars not in sigma plot: {0:.1f}".format(100. * g.np.where(ds > 5)[0].shape[0] / float(len(ds)))
 f.savefig("rave_vs_2mass_2.png")
 
-"""
-g.gplot.plt.figure(figsize=(5,5))
-g.gplot.plt.hist(diff, bins = g.np.arange(0, 200, 5), normed=True)
-g.gplot.plt.xlim(0, 75)
-g.gplot.plt.xlabel("$|v_{r,\,RAVE} - v_{r,\,Gaia}|$ (km s$^{-1}$)")
-g.gplot.plt.ylabel("Frequency")
-g.gplot.plt.title("Difference between observed and predicted $v_r$\nMean: {mean:.0f} ; Median: {median:.0f} km".format(mean = g.np.mean(diff), median = g.np.median(diff))+"s$^{-1}$")
-print "Fraction of stars not in this plot: {0:.1f}".format(100. * g.np.where(diff > 75)[0].shape[0] / float(len(diff)))
-g.gplot.plt.savefig("rave_vs_2mass.png")
-g.gplot.plt.close()
-
-
-g.gplot.plt.figure(figsize=(5,5))
-g.gplot.plt.hist(ds, bins = g.np.arange(0, 10, 0.25), normed=True)
-g.gplot.plt.xlim(0, 5)
-g.gplot.plt.xlabel("$|v_{r,\,RAVE} - v_{r,\,Gaia}| / \sigma_{Gaia}$")
-g.gplot.plt.ylabel("Frequency")
-g.gplot.plt.title("Difference between observed and predicted $v_r$\nMean: {mean:.1f} ; Median: {median:.1f} $\sigma$".format(mean = g.np.mean(ds), median = g.np.median(ds)))
-print "Fraction of stars not in this plot: {0:.1f}".format(100. * g.np.where(ds > 5)[0].shape[0] / float(len(ds)))
-g.gplot.plt.savefig("rave_vs_2mass_R.png")
-g.gplot.plt.close()
-"""
-
-print "Median 95% width:", g.np.median(sigmas*4.)
-
 print "Within 95%:", 100.* g.np.where((summary["HRV"] > summary["lower_c"]) & (summary["HRV"] < summary["upper_c"]))[0].shape[0] / float(len(summary))
 
 print "Mean error on HRV in RAVE:", g.np.mean(summary["eHRV"])

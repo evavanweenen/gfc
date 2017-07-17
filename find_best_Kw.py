@@ -52,8 +52,6 @@ axs[0].set_ylabel("$\sqrt{w}$ (km s$^{-1}$)")
 axs[0].set_xlim(Krange[0]-0.5, Krange[-1]+0.5)
 axs[1].set_xlim(Krange[0]-0.5, Krange[-1]+0.5)
 axs[0].set_ylim(sqwrange[0]-0.125, sqwrange[-1]+0.125)
-#axs[0].set_title("XD")
-#axs[1].set_title("RAVE")
 
 div0 = make_axes_locatable(axs[0])
 div1 = make_axes_locatable(axs[1])
@@ -65,18 +63,6 @@ cax1 = div1.append_axes("top", size="8%", pad=0.05)
 cbar1 = f.colorbar(im1, cax=cax1, format="%.0f", orientation="horizontal")
 cax1.xaxis.tick_top()
 cbar1.set_ticks(g.np.arange(150, 650, 100))
-
-#g.gplot.plt.figure(figsize=(9,10), tight_layout = True)        
-#g.gplot.plt.imshow(Ltable.T, extent=(Krange[0]-0.5, Krange[-1]+0.5, sqwrange[0], sqwrange[-1]), aspect='auto', interpolation='none')
-#g.gplot.plt.xlabel("$K$")
-#g.gplot.plt.ylabel("$\sqrt{w}$ (km s$^{-1}$)")
-#g.gplot.plt.title("Log-likelihood of XD models on Gaia data")
-#cb = g.gplot.plt.colorbar(orientation='horizontal', pad=0.08)
-#cb.set_label("ln(likelihood) + 27")
-#cb.ax.tick_params(axis='x', direction='in', labeltop='off', labelbottom='on')
-#cb.ax.set_xticklabels(cb.ax.get_xticklabels(),rotation=90)
-
-#g.gplot.plt.savefig("tgas/2MASS/L.png")
 
 f.savefig("L.png")
 

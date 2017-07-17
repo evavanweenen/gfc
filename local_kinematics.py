@@ -99,16 +99,3 @@ print "V: {0:.2f} +- {1:.2f}".format(Vat0M, Vat0errM)
 print "W: {0:.2f} +- {1:.2f}".format(WmeanM, WmeanerrM)
 g.gplot.S2UVW(UR, VR, WR, S2R_, UM, VM, WM, S2M_, UmeanR, VcoeR, WmeanR, UmeanM, VcoeM, WmeanM, saveto="S2-UVW.png")
 g.gplot.S2V(VR, S2R_, VM, S2M_, VcoeR, VcoeM, saveto="S2-V.png")
-raise Exception
-
-#tblue = t[t["BminV"] > 0]
-#Umean = -tblue["U"].mean() ; Umeanerr = g.mean_sigma(tblue["U"])
-#Wmean = -tblue["W"].mean() ; Wmeanerr = g.mean_sigma(tblue["W"])
-#Vcoe, Vcov = g.np.polyfit(S2[binsS2 > 0], meansV[binsS2 > 0], 1, cov=True)
-#Vat0 = Vcoe[1] ; Vat0err = g.np.sqrt(Vcov[1,1])
-#print "Solar velocity:"
-#print "U: {0:.2f} +- {1:.2f}".format(Umean, Umeanerr)
-#print "V: {0:.2f} +- {1:.2f}".format(Vat0, Vat0err)
-#print "W: {0:.2f} +- {1:.2f}".format(Wmean, Wmeanerr)
-
-#g.gplot.S2UVW(S2, [meansU,meansV,meansW], [sigmasU,sigmasV,sigmasW], lines=[(0, Umean), Vcoe, (0, Wmean)], saveto="tgas/RAVE/rave_tgas_S2UVW.png")
