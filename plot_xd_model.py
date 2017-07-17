@@ -17,11 +17,12 @@ import numpy as np
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("xd_results_folder", help = "Folder that contains the XD results")
-parser.add_argument("save_folder", help = "Folder in which plot will be saved")
+parser.add_argument("saveto_folder", help = "Folder in which plot will be saved")
 parser.add_argument("-v", "--verbose", action = "store_true")
 args = parser.parse_args()
 
 volume = 0.6827
+levels = np.logspace(-6, -2.7, 12)
 
 def text(ax1):
     ax1.text(60, -90, "Arcturus")
@@ -55,8 +56,27 @@ def set_axes(ax1, ax2, ax3):
     ax1.set_xticks((-100, -50, 0, 50, 100))
     ax1.set_yticks((-100, -50, 0, 50))
 
+def eigsorted(cov):
+    """
+    http://www.nhsilbert.net/source/2014/06/bivariate-normal-ellipse-plotting-in-python/
+    """
+    vals, vecs = np.linalg.eigh(cov)
+    order = vals.argsort()[::-1]
+    return vals[order], vecs[:,order]
+def draw_PDF_ellipse(ax, amp, mean, cov, xyz, volume = 0.6827, **kwargs):
+    choose_from = {"xy": [0, 1], "xz": [0, 2], "yz": [1, 2]}
+    pair_int = choose_from[xyz]
+    mean_ = mean[pair_int]
+    cov_ = cov[pair_int][:, pair_int]
+
+    vals, vecs = eigsorted(cov_)
+    theta = np.degrees(np.arctan2(*vecs[:,0][::-1]))
+    width, height = 2 * np.sqrt(chi2.ppf(volume,2)) * np.sqrt(vals)
+    ell = Ellipse(xy = mean_, width = width, height = height, angle = theta, facecolor = "None", linewidth = 1 + 7.5*amp, **kwargs)
+    ax.add_artist(ell)
+
 amps_xd = np.load(args.xd_results_folder+"amplitudes.npy")
-means_xd = .np.load(args.xd_results_folder+"means.npy")
+means_xd = np.load(args.xd_results_folder+"means.npy")
 covs_xd = np.load(args.xd_results_folder+"covariances.npy")
 
 f = plt.figure(figsize=(8,8), tight_layout = True)
@@ -76,11 +96,11 @@ for a, m, c in zip(amps_xd, means_xd, covs_xd):
 
 text(ax1)
 
-f.savefig(args.saveto_folder+"PDFs_gaia.png")
+f.savefig(args.saveto_folder+"/PDFs.png")
 plt.close(f)
 
-PDFs = map(g.pdf.multivariate, means_xd, covs_xd, amps_xd)
-evalxyz = g.pdf.eval_total_PDF(PDFs, [(-140,140), (-130,130), (-72,72)])
+PDFs = map(gfc.pdf.multivariate, means_xd, covs_xd, amps_xd)
+evalxyz = gfc.pdf.eval_total_PDF(PDFs, [(-140,140), (-130,130), (-72,72)])
 evalxy = evalxyz.sum(2)
 evalxz = evalxyz.sum(1)
 evalyz = evalxyz.sum(0)
@@ -97,7 +117,7 @@ ax2.contour(evalxz.T, extent = [-140, 140, -72, 72], levels = levels, colors = '
 ax3.contour(evalyz.T, extent = [-130, 130, -72, 72], levels = levels, colors = '0.5')
 set_axes(ax1, ax2, ax3)
 text(ax1)
-f.savefig(args.saveto_folder+"Eval_gaia.png")
+f.savefig(args.saveto_folder+"/total.png")
 plt.close(f)
 
 print " - Total plotted"
@@ -105,7 +125,7 @@ print " - Total plotted"
 s = []
 s.append(r"\begin{table}[h]")
 s.append(r"\centering")
-s.append(r"\caption{Parameters of the components of the model with $K = "+str(K)+r"$ and $w = "+str(w)+"$ km$^2$ s$^{-2}$}")
+s.append(r"\caption{Parameters of the components of the model")# with $K = "+str(K)+r"$ and $w = "+str(w)+"$ km$^2$ s$^{-2}$}")
 s.append(r"\label{t:gc}")
 s.append(r"\begin{adjustbox}{center}")
 s.append(r"\begin{tabular}{rlrrrrrrrrr}")
