@@ -6,9 +6,6 @@ These are all imported into the main gfc module, so you do not need to import gf
 from __future__ import division
 
 from matplotlib import rcParams
-rcParams["font.size"] = 25
-rcParams["figure.figsize"] = 20, 20
-rcParams["axes.grid"] = True
 
 from .pdf import univariate
 from .mapping import map_np, pmap_np, smap_np
