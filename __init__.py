@@ -1,4 +1,4 @@
-from . import simulated as sim
+#from . import simulated as sim
 from . import hipparcos as hip
 from . import tgas
 from . import pdf
