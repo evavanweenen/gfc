@@ -3,6 +3,9 @@ Functions for mapping other functions over (large) data sets, including multipro
 """
 
 import numpy as np
+from time import time
+from os import mkdir
+from shutil import rmtree
 
 from parmap import map as pmap, starmap as smap
 from multiprocessing import cpu_count
@@ -18,6 +21,53 @@ def pmap_np(function, iterable, *args, **kwargs):
 
 def smap_np(function, iterables, *args, **kwargs):
     return np.array(smap(function, iterables, *args, processes = cpu_count(), **kwargs))
+
+def timestamp():
+    return str(int(time()))
+def pmap_split(function, iterable, splitby, verbose, *args, **kwargs):
+    f = "temp" + timestamp()
+    mkdir(f)
+    try:
+        cur_index, j = 0, 0
+        while len(iterable[cur_index:]):
+            max_index = cur_index + splitby
+            if len(iterable[max_index:]) <= splitby/4:
+                max_index = len(iterable)
+            t_split = iterable[cur_index:max_index]
+            if verbose:
+                print "First index: {0} \nLast index: {1}\nLength: {2}\n**Progress: {3:.0f}%".format(cur_index, max_index, len(t_split), 100.*max_index/len(iterable))
+            res = pmap_np(function, t_split, *args, **kwargs)
+            np.save("{0}/{1}.npy".format(f, j), res)
+            del res
+            cur_index = max_index
+            j += 1
+        allres = np.concatenate([np.load("{0}/{1}.npy".format(f, i)) for i in range(j)])
+    finally:
+        rmtree(f)
+    return allres
+
+def smap_split(function, iterables, splitby, verbose, *args, **kwargs):
+    f = "temp" + timestamp()
+    mkdir(f)
+    print f
+    try:
+        cur_index, j = 0, 0
+        while len(iterables[cur_index:]):
+            max_index = cur_index + splitby
+            if len(iterables[max_index:]) <= splitby/4:
+                max_index = len(iterables)
+            t_split = iterables[cur_index:max_index]
+            if verbose:
+                print "First index: {0} \nLast index: {1}\nLength: {2}\n**Progress: {3:.0f}%".format(cur_index, max_index, len(t_split), 100.*max_index/len(iterables))
+            res = smap_np(function, t_split, *args, **kwargs)
+            np.save("{0}/{1}.npy".format(f, j), res)
+            del res
+            cur_index = max_index
+            j += 1
+        allres = np.concatenate([np.load("{0}/{1}.npy".format(f, i)) for i in range(j)])
+    finally:
+        rmtree(f)
+    return allres
 
 def bin_groups(bo_orig, min_in_group, minrange):
     bo = bo_orig.copy()

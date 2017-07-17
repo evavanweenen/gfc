@@ -5,7 +5,7 @@ Functions specific to TGAS data
 import numpy as np
 from . import general as gen
 from .io import read_votable
-from .mapping import map_np, pmap_np, smap_np
+from .mapping import *
 from astropy import table
 import os
 from shutil import rmtree
@@ -21,7 +21,8 @@ def read_data_as_table(loc = "tgas/tgas_all.vot"):
 
 def add_w(t):
     # zero for declination because pmra is pmra*cos(dec)
-    ws = smap_np(gen.w_star, zip(t["parallax"], t["pmra"], t["pmdec"]))
+    #ws = smap_np(gen.w_star, zip(t["parallax"], t["pmra"], t["pmdec"]))
+    ws = smap_split(gen.w_star, zip(t["parallax"], t["pmra"], t["pmdec"]), splitby = 55000, verbose = True)
     t.add_column(table.Column(data = ws[:, 0, 0], name = "w1", unit = "km / s"))
     t.add_column(table.Column(data = ws[:, 1, 0], name = "w2", unit = "1 / yr"))
     t.add_column(table.Column(data = ws[:, 2, 0], name = "w3", unit = "1 / yr"))
@@ -66,26 +67,29 @@ def add_S(t, split_into = 55000, verbose = True):
     if len(t) < split_into:
         Ss = smap_np(gen.S, zip(t["C"], t["Q"]))
     else:
-        f = gen.timestamp() + "S"
-        os.mkdir(f)
-        try:
-            cur_index, j = 0, 0
-            while len(t[cur_index:]):
-                max_index = cur_index + split_into
-                if len(t[max_index:]) <= split_into/3:
-                    max_index = len(t)
-                t_split = t[cur_index:max_index]
-                if verbose:
-                    print "First index: {0} \nLast index: {1}\nLength: {2}\n**Progress: {3:.0f}%".format(cur_index, max_index, len(t_split), 100.*max_index/len(t))
-                Ss = smap_np(gen.S, zip(t_split["C"], t_split["Q"]))
+        print "splitting"
+        Ss = smap_split(gen.S, zip(t["C"], t["Q"]), splitby = split_into, verbose = verbose)
+    #else:
+    #    f = gen.timestamp() + "S"
+    #    os.mkdir(f)
+    #    try:
+    #        cur_index, j = 0, 0
+    #        while len(t[cur_index:]):
+    #            max_index = cur_index + split_into
+    #            if len(t[max_index:]) <= split_into/3:
+    #                max_index = len(t)
+    #            t_split = t[cur_index:max_index]
+    #            if verbose:
+    #                print "First index: {0} \nLast index: {1}\nLength: {2}\n**Progress: {3:.0f}%".format(cur_index, max_index, len(t_split), 100.*max_index/len(t))
+    #            Ss = smap_np(gen.S, zip(t_split["C"], t_split["Q"]))
     #            Ss = np.arange(len(t_split))
-                np.save("{0}/{1}.npy".format(f, j), Ss)
-                del Ss
-                cur_index = max_index
-                j += 1
-            Ss = np.concatenate([np.load("{0}/{1}.npy".format(f, i)) for i in range(j)])
-        finally: # always clean up your mess
-            rmtree(f)
+    #            np.save("{0}/{1}.npy".format(f, j), Ss)
+    #            del Ss
+    #            cur_index = max_index
+    #            j += 1
+    #        Ss = np.concatenate([np.load("{0}/{1}.npy".format(f, i)) for i in range(j)])
+    #    finally: # always clean up your mess
+    #        rmtree(f)
     t.add_column(table.Column(data = Ss, name = "S"))
 
 def wrap_v_r(PDFs, row, *args, **kwargs):
