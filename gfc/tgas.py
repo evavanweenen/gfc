@@ -1,3 +1,7 @@
+"""
+Functions specific to TGAS data
+"""
+
 import numpy as np
 from . import general as gen
 from .io import read_votable

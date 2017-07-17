@@ -1,3 +1,7 @@
+"""
+Functions for mapping other functions over (large) data sets, including multiprocessing capabilities.
+"""
+
 import numpy as np
 
 from parmap import map as pmap, starmap as smap

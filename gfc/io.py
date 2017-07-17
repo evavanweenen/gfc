@@ -1,3 +1,7 @@
+"""
+Functions for input and output
+"""
+
 from astropy import table, units
 from astroquery.simbad import Simbad
 from astropy.io.ascii import read as read_ascii

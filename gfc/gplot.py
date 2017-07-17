@@ -1,5 +1,6 @@
 """
-Olivier Burggraaff
+Functions to more easily make certain plots.
+Some are very general, some are very hardcoded.
 """
 
 from matplotlib import pyplot as plt

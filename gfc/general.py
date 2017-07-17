@@ -1,5 +1,6 @@
 """
-Olivier Burggraaff
+General-use functions that did not fit easily into a submodule
+These are all imported into the main gfc module, so you do not need to import gfc.general
 """
 
 from __future__ import division

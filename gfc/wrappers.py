@@ -1,3 +1,6 @@
+"""
+Wrappers -- deprecated, to be removed
+"""
 import numpy as np
 
 from .io import fetch_v_r_from_simbad, flush

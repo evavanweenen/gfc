@@ -1,3 +1,7 @@
+"""
+Functions for dealing with Probability Density Functions
+"""
+
 import numpy as np
 
 from scipy.stats import multivariate_normal, norm
