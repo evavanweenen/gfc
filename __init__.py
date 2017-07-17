@@ -1,9 +1,9 @@
 #from . import simulated as sim
-from . import hipparcos as hip
-from . import tgas
-from . import pdf
-from . import io
-from . import mapping
-from . import wrappers
-from . import gplot
-from .general import *
+from .gfc import hipparcos as hip
+from .gfc import tgas
+from .gfc import pdf
+from .gfc import io
+from .gfc import mapping
+from .gfc import wrappers
+from .gfc import gplot
+from .gfc.general import *
