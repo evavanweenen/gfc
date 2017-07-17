@@ -14,7 +14,6 @@ import numpy as np
 from scipy.stats import chi2
 
 from .pdf import entropy
-from .general import GFC_Exception
 
 from operator import add
 
@@ -247,6 +246,8 @@ def binned_1d(bin_left_edges, values, highest, sigmas = None, saveto=None, x_sig
 
 def binned_1d_multi(bin_left_edges_list, values_list, highest_list, sigmas_list=None, saveto=None, kwargs_list=None, dotkwargs={}, fmt="o", x_sig=None, **figure_kwargs):
     """
+    this function is a MESS
+    should be redone completely
     if x_sig then sigma_list is assumed to be zip(xerr, yerr)
     """
     fig, axs = plt.subplots(ncols=1, nrows=len(bin_left_edges_list), **figure_kwargs)
