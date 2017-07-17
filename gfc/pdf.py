@@ -8,9 +8,6 @@ from scipy.stats import multivariate_normal, norm
 
 from .mapping import pmap
 
-class GFC_Exception(Exception):
-    pass
-
 def entropy(x, f):
     w = np.diff(x)
     f_ = np.copy(f[:-1])
@@ -59,5 +56,5 @@ def flatten_to_2D(evaluated, which="all"):
         yz = evaluated.sum(0)
         result = (xy, xz, yz)
     else:
-        raise GFC_Exception("gaia_fc.pdf.flatten_to_2D: unrecognised input value for keyword `which`: {0}".format(which))
+        raise Exception("gaia_fc.pdf.flatten_to_2D: unrecognised input value for keyword `which`: {0}".format(which))
     return result
