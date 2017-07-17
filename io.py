@@ -45,7 +45,7 @@ def read_votable(*args, **kwargs):
     return t
 
 def read_csv(*args, **kwargs):
-    t = read(*args, format="csv", **kwargs)
+    t = read_ascii(*args, format="csv", **kwargs)
     return t
 
 def find_array_columns(t):
@@ -78,7 +78,7 @@ def write_table_with_separate_arrays(t, saveto_folder, format="ascii.fixed_width
     t_no_arr.write("{0}/table.dat".format(saveto_folder), format=format, overwrite=True, *args, **kwargs)
 
 def load_table_with_separate_arrays(saveto_folder, format="fixed_width", *args, **kwargs):
-    t = read("{0}/table.dat".format(saveto_folder), format=format, *args, **kwargs)
+    t = read_ascii("{0}/table.dat".format(saveto_folder), format=format, *args, **kwargs)
     array_files = glob("{0}/np/*.npy".format(saveto_folder))
     arrays = [load(f) for f in array_files]
     for f, arr in zip(array_files, arrays):
