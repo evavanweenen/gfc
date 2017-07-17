@@ -2,7 +2,6 @@ import numpy as np
 
 from parmap import map as pmap, starmap as smap
 from multiprocessing import cpu_count
-cpu_count = cpu_count()
 
 from astropy.table.column import MaskedColumn, Column
 from astropy.table.table import Table
@@ -11,10 +10,10 @@ def map_np(function, *args, **kwargs):
     return np.array(map(function, *args, **kwargs))
 
 def pmap_np(function, iterable, *args, **kwargs):
-    return np.array(pmap(function, iterable, *args, processes = cpu_count, **kwargs))
+    return np.array(pmap(function, iterable, *args, processes = cpu_count(), **kwargs))
 
 def smap_np(function, iterables, *args, **kwargs):
-    return np.array(smap(function, iterables, *args, processes = cpu_count, **kwargs))
+    return np.array(smap(function, iterables, *args, processes = cpu_count(), **kwargs))
 
 def bin_groups(bo_orig, min_in_group, minrange):
     bo = bo_orig.copy()
