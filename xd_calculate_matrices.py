@@ -59,3 +59,5 @@ if args.verbose:
     print "Added S"
 
 gfc.io.write_table_with_separate_arrays(t, saveto_folder = args.save_folder)
+if args.verbose:
+    print "Saved results"
