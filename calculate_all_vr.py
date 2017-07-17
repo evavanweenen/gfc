@@ -1,5 +1,5 @@
 """
-Olivier Burggraaff
+Predict radial velocities for stars using a model from XD
 """
 
 import gaia_fc as g

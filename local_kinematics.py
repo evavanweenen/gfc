@@ -1,5 +1,7 @@
 """
-Olivier Burggraaff
+Calculate S^2, U, V, W velocities as functions of B-V colours to:
+- look for Parenago's discontinuity
+- determine the motion of the Sun
 """
 
 import gaia_fc as g

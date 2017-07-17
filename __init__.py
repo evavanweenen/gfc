@@ -1,5 +1,6 @@
-#from . import simulated as sim
-from .gfc import hipparcos as hip
+"""
+__init__ file for the gfc module
+"""
 from .gfc import tgas
 from .gfc import pdf
 from .gfc import io

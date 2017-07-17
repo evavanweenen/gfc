@@ -1,3 +1,7 @@
+"""
+Make HR diagrams of the data with and without the main sequence
+"""
+
 import gaia_fc as g
 import matplotlib as mpl
 mpl.rcParams.update(mpl.rcParamsDefault)

@@ -1,3 +1,8 @@
+"""
+Calculate several matrices used in XD.
+Run this script to do it once so it doesn't have to be re-done every time (can be quite computationally heavy).
+"""
+
 import gfc
 from sys import argv
 data_file = argv[1]

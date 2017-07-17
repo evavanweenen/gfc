@@ -1,3 +1,9 @@
+"""
+Find the optimal values of K, w for several XD models using two tests:
+- XD internal likelihood
+- predicted/observed radial velocities
+"""
+
 import gaia_fc as g
 import matplotlib
 matplotlib.rcParams.update({'font.size': 26, "figure.figsize": (10, 5)})

@@ -1,3 +1,7 @@
+"""
+Compare observed and predicted radial velocities
+"""
+
 from matplotlib import rcParams
 import gaia_fc as g
 rcParams.update({"font.size": "12"})

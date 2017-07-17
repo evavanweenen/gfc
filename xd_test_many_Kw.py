@@ -1,3 +1,8 @@
+"""
+Fit a model to TGAS data using XD.
+Note: several matrices must be pre-calculated, e.g. using the script `xd_calculate_matrices.py`
+"""
+
 import gfc
 
 sqwrange = gfc.np.arange(0.5, 3.75, 0.25)

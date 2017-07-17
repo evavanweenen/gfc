@@ -1,3 +1,7 @@
+"""
+Plot individual components and total velocity distribution of XD model
+"""
+
 import gaia_fc as g
 from sys import argv
 from matplotlib import pyplot as plt

@@ -1,3 +1,7 @@
+"""
+Plot a histogram of local velocity space using TGAS and RAVE data
+"""
+
 import gaia_fc as g
 import matplotlib as mpl
 mpl.rcParams.update(mpl.rcParamsDefault)
