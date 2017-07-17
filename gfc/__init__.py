@@ -1,3 +1,10 @@
 """
-I am just here so you can import gfc using the __init__.py in the folder above mine
+__init__ file for the gfc module
 """
+from . import tgas
+from . import pdf
+from . import io
+from . import mapping
+from . import wrappers
+from . import gplot
+from .general import *
