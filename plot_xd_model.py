@@ -1,9 +1,10 @@
 """
 Plot individual components and total velocity distribution of XD model
+
+TODO: Move to gfc.gplot
 """
 
-import gaia_fc as g
-from sys import argv
+import gfc
 from matplotlib import pyplot as plt
 from matplotlib import gridspec as gs
 from matplotlib.patches import Ellipse
@@ -12,6 +13,13 @@ import matplotlib as mpl
 from scipy.stats import chi2
 
 import numpy as np
+
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("xd_results_folder", help = "Folder that contains the XD results")
+parser.add_argument("save_folder", help = "Folder in which plot will be saved")
+parser.add_argument("-v", "--verbose", action = "store_true")
+args = parser.parse_args()
 
 volume = 0.6827
 
@@ -32,26 +40,6 @@ def text(ax1):
     ax1.text(-125, -42, "Hercules")
     ax1.plot([-93.5, -28], [-40, -42], c='k', lw=2)
     
-def eigsorted(cov):
-    """
-    http://www.nhsilbert.net/source/2014/06/bivariate-normal-ellipse-plotting-in-python/
-    """
-    vals, vecs = np.linalg.eigh(cov)
-    order = vals.argsort()[::-1]
-    return vals[order], vecs[:,order]
-def draw_PDF_ellipse(ax, amp, mean, cov, xyz, volume = 0.6827, **kwargs):
-    assert xyz in ("xy", "xz", "yz"), "gaia_fc.gplot.draw_PDF_ellipse: parameter `xyz` must be one of ('xy', 'xz', 'yz'); received value {0}".format(xyz)
-    choose_from = {"xy": [0, 1], "xz": [0, 2], "yz": [1, 2]}
-    pair_int = choose_from[xyz]
-    mean_ = mean[pair_int]
-    cov_ = cov[pair_int][:, pair_int]
-
-    vals, vecs = eigsorted(cov_)
-    theta = np.degrees(np.arctan2(*vecs[:,0][::-1]))
-    width, height = 2 * np.sqrt(chi2.ppf(volume,2)) * np.sqrt(vals)
-    ell = Ellipse(xy = mean_, width = width, height = height, angle = theta, facecolor = "None", linewidth = 1 + 7.5*amp, **kwargs)
-    ax.add_artist(ell)
-
 def set_axes(ax1, ax2, ax3):
     ax1.set_xlim(-130, 120) ; ax1.set_ylim(-120, 60)
     ax2.set_xlim(-130, 120) ; ax2.set_ylim(-70, 70)
@@ -67,10 +55,9 @@ def set_axes(ax1, ax2, ax3):
     ax1.set_xticks((-100, -50, 0, 50, 100))
     ax1.set_yticks((-100, -50, 0, 50))
 
-f = "tgas/2MASS/XD_K_w/w_{w}/K_{K}/".format(w = w, K = K)
-amps_xd = g.np.load(f+"amplitudes.npy")
-means_xd = g.np.load(f+"means.npy")
-covs_xd = g.np.load(f+"covariances.npy")
+amps_xd = np.load(args.xd_results_folder+"amplitudes.npy")
+means_xd = .np.load(args.xd_results_folder+"means.npy")
+covs_xd = np.load(args.xd_results_folder+"covariances.npy")
 
 f = plt.figure(figsize=(8,8), tight_layout = True)
 
@@ -89,7 +76,7 @@ for a, m, c in zip(amps_xd, means_xd, covs_xd):
 
 text(ax1)
 
-f.savefig("PDFs_gaia.png")
+f.savefig(args.saveto_folder+"PDFs_gaia.png")
 plt.close(f)
 
 PDFs = map(g.pdf.multivariate, means_xd, covs_xd, amps_xd)
@@ -110,7 +97,7 @@ ax2.contour(evalxz.T, extent = [-140, 140, -72, 72], levels = levels, colors = '
 ax3.contour(evalyz.T, extent = [-130, 130, -72, 72], levels = levels, colors = '0.5')
 set_axes(ax1, ax2, ax3)
 text(ax1)
-f.savefig("Eval_gaia.png")
+f.savefig(args.saveto_folder+"Eval_gaia.png")
 plt.close(f)
 
 print " - Total plotted"
@@ -136,6 +123,6 @@ s.append(r"\end{adjustbox}")
 s.append(r"\end{table}")
 
 s2 = reduce(lambda x, y: x + "\n" + y, s)
-print >> open("gaia_comp.tex", 'w'), s2
+print >> open(args.saveto_folder+"gaia_comp.tex", 'w'), s2
 
 print " - Table written"
