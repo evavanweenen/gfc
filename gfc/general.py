@@ -177,6 +177,18 @@ def Q_star(parallax, mu_alpha_star, mu_delta):
 
     return Q
 
+def Q_star_many(parallax, mu_alpha_star, mu_delta):
+    Q = np.empty((len(parallax), 3, 5))
+    Q[:,0,:] = 0.
+    Q[:,:,:2] = 0.
+    Q[:,1,2] = -k/(parallax**2.) * mu_alpha_star
+    Q[:,1,3] = k/parallax
+    Q[:,1,4] = 0.
+    Q[:,2,2] = -k/(parallax**2.) * mu_delta     
+    Q[:,2,3] = 0.
+    Q[:,2,4] = k/parallax
+    return Q
+
 def S(C, Q):
     S = Q.dot(C).dot(Q.T)
     return S

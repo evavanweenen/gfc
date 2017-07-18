@@ -69,7 +69,7 @@ def add_C(t):
     t.add_column(table.Column(data = Cs, name = "C"))
 
 def add_Q(t):
-    Qs = smap_np(gen.Q_star, zip(t["parallax"], t["pmra"], t["pmdec"]))
+    Qs = gen.Q_star_many(t["parallax"], t["pmra"], t["pmdec"])
     t.add_column(table.Column(data = Qs, name = "Q"))
 
 def add_S(t, split_into = 55000, verbose = True):
