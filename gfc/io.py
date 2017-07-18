@@ -85,7 +85,7 @@ def write_table_with_separate_arrays(t, saveto_folder, format="ascii.fast_csv", 
         print ""
 
 def load_table_with_separate_arrays(saveto_folder, format="csv", verbose = True, *args, **kwargs):
-    t = read_ascii("{0}/table.dat".format(saveto_folder), format=format, *args, **kwargs)
+    t = read_ascii("{0}/table.csv".format(saveto_folder), format=format, *args, **kwargs)
     array_files = glob("{0}/np/*.npy".format(saveto_folder))
     arrays = [load(f) for f in array_files]
     for f, arr in zip(array_files, arrays):
