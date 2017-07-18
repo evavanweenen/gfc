@@ -20,9 +20,7 @@ def read_data_as_table(loc = "tgas/tgas_all.vot"):
     return t
 
 def add_w(t):
-    # zero for declination because pmra is pmra*cos(dec)
-    #ws = smap_np(gen.w_star, zip(t["parallax"], t["pmra"], t["pmdec"]))
-    ws = smap_split(gen.w_star, zip(t["parallax"], t["pmra"], t["pmdec"]), splitby = 55000, verbose = True)
+    ws = gen.w_many(t["parallax"], t["pmra"], t["pmdec"])
     t.add_column(table.Column(data = ws[:, 0, 0], name = "w1", unit = "km / s"))
     t.add_column(table.Column(data = ws[:, 1, 0], name = "w2", unit = "1 / yr"))
     t.add_column(table.Column(data = ws[:, 2, 0], name = "w3", unit = "1 / yr"))

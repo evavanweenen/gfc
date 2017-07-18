@@ -144,9 +144,17 @@ def w(delta, parallax, mu_alpha, mu_delta, v_r):
     return w
 
 def w_star(parallax, mu_alpha_star, mu_delta, v_r = 0):
+    el1 = v_r
     el2 = (k / parallax) * mu_alpha_star
     el3 = (k / parallax) * mu_delta
-    w = array([[v_r], [el2], [el3]])
+    w = array([[el1], [el2], [el3]])
+    return w
+
+def w_many(parallax, mu_alpha_star, mu_delta, v_r = 0):
+    w = np.empty((len(parallax), 3, 1))
+    w[:,0] = v_r
+    w[:,1] = (k / parallax * mu_alpha_star)[:, np.newaxis]
+    w[:,2] = (k / parallax * mu_delta)[:, np.newaxis]
     return w
 
 def Q(alpha, delta, parallax, mu_alpha, mu_delta):
