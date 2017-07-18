@@ -28,7 +28,7 @@ w = args.w
 if args.verbose:
     print "Loaded initial estimates for Gaussian parameters"
     
-t = gfc.io.load_table_with_separate_arrays(saveto_folder = args.data_folder)
+t = gfc.io.load_table_with_separate_arrays(saveto_folder = args.data_folder, verbose = args.verbose)
 assert all(col in t.keys() for col in ["w1", "w2", "w3", "S", "R"])
 
 if args.verbose:
