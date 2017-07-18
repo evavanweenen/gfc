@@ -65,7 +65,7 @@ if args.verbose:
     print "Calculated matrices in {0:.1f} seconds".format(time_after_matrices - time_before_matrices)
 
 time_before_writing = gfc.time()
-gfc.io.write_table_with_separate_arrays(t, saveto_folder = args.save_folder)
+gfc.io.write_table_with_separate_arrays(t, saveto_folder = args.save_folder, verbose = args.verbose)
 time_after_writing = gfc.time()
 if args.verbose:
     print "Written in {0:.1f} seconds".format(time_after_writing - time_before_writing)

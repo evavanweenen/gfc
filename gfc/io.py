@@ -67,7 +67,7 @@ def write_table_without_arrays(t, saveto, format="ascii.fast_csv", exclude_cols=
     new_t = remove_array_columns_from_table(new_t)
     new_t.write(saveto, format=format, *args, **kwargs)
 
-def write_table_with_separate_arrays(t, saveto_folder, format="ascii.fast_csv", exclude_cols=[], *args, **kwargs):
+def write_table_with_separate_arrays(t, saveto_folder, format="ascii.fast_csv", exclude_cols=[], verbose = True, *args, **kwargs):
     t_no_arr = remove_array_columns_from_table(t)
     arrays   = find_array_columns(t)
     assert "table" not in arrays, "gaia_fc.io.write_table_with_separate_arrays: There is a column named `table` in your table, which cannot be written out"
@@ -77,11 +77,14 @@ def write_table_with_separate_arrays(t, saveto_folder, format="ascii.fast_csv", 
         os.mkdir(saveto_folder + "/np/")
     for arr_key in arrays:
         save("{0}/np/{1}.npy".format(saveto_folder, arr_key), t[arr_key]._data)
-        print arr_key,
-        flush()
-    t_no_arr.write("{0}/table.dat".format(saveto_folder), format=format, overwrite=True, *args, **kwargs)
+        if verbose:
+            print arr_key,
+            flush()
+    t_no_arr.write("{0}/table.csv".format(saveto_folder), format=format, overwrite=True, *args, **kwargs)
+    if verbose:
+        print ""
 
-def load_table_with_separate_arrays(saveto_folder, format="fixed_width", *args, **kwargs):
+def load_table_with_separate_arrays(saveto_folder, format="csv", verbose = True, *args, **kwargs):
     t = read_ascii("{0}/table.dat".format(saveto_folder), format=format, *args, **kwargs)
     array_files = glob("{0}/np/*.npy".format(saveto_folder))
     arrays = [load(f) for f in array_files]
@@ -89,8 +92,11 @@ def load_table_with_separate_arrays(saveto_folder, format="fixed_width", *args, 
         name = os.path.splitext(os.path.basename(f))[0]
         as_column = table.Column(data = arr, name = name)
         t.add_column(as_column)
-        print name,
-        flush()
+        if verbose:
+            print name,
+            flush()
+    if verbose:
+        print ""
     return t
 
 def save_PDFs(amplitudes, means, covariances, saveto_folder, *args, **kwargs):
