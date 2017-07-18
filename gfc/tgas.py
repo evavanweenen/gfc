@@ -73,32 +73,7 @@ def add_Q(t):
     t.add_column(table.Column(data = Qs, name = "Q"))
 
 def add_S(t, split_into = 55000, verbose = True):
-    if len(t) < split_into:
-        Ss = smap_np(gen.S, zip(t["C"], t["Q"]))
-    else:
-        print "splitting"
-        Ss = smap_split(gen.S, zip(t["C"], t["Q"]), splitby = split_into, verbose = verbose)
-    #else:
-    #    f = gen.timestamp() + "S"
-    #    os.mkdir(f)
-    #    try:
-    #        cur_index, j = 0, 0
-    #        while len(t[cur_index:]):
-    #            max_index = cur_index + split_into
-    #            if len(t[max_index:]) <= split_into/3:
-    #                max_index = len(t)
-    #            t_split = t[cur_index:max_index]
-    #            if verbose:
-    #                print "First index: {0} \nLast index: {1}\nLength: {2}\n**Progress: {3:.0f}%".format(cur_index, max_index, len(t_split), 100.*max_index/len(t))
-    #            Ss = smap_np(gen.S, zip(t_split["C"], t_split["Q"]))
-    #            Ss = np.arange(len(t_split))
-    #            np.save("{0}/{1}.npy".format(f, j), Ss)
-    #            del Ss
-    #            cur_index = max_index
-    #            j += 1
-    #        Ss = np.concatenate([np.load("{0}/{1}.npy".format(f, i)) for i in range(j)])
-    #    finally: # always clean up your mess
-    #        rmtree(f)
+    Ss = gen.S_many(t["C"], t["Q"])
     t.add_column(table.Column(data = Ss, name = "S"))
 
 def wrap_v_r(PDFs, row, *args, **kwargs):

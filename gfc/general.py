@@ -160,16 +160,6 @@ def w_many(parallax, mu_alpha_star, mu_delta, v_r = 0):
     w[:,2] = (k / parallax * mu_delta)[:, np.newaxis]
     return w
 
-def Q(alpha, delta, parallax, mu_alpha, mu_delta):
-    kplx = (k/parallax)
-    cosd = cos(delta)
-
-    Q = array([[0., 0.,                               0.,                                 0.,          0.  ],
-               [0., -kplx * mu_alpha * sin(delta),    -kplx / parallax * mu_alpha * cosd, kplx * cosd, 0.  ],
-               [0., 0.,                               -kplx / parallax * mu_delta,        0.,          kplx]])
-
-    return Q
-
 def Q_star(parallax, mu_alpha_star, mu_delta):
     Q = array([[0., 0., 0.                               , 0.        , 0.        ],
                [0., 0., -k/(parallax**2.) * mu_alpha_star, k/parallax, 0.        ],
@@ -191,6 +181,16 @@ def Q_star_many(parallax, mu_alpha_star, mu_delta):
 
 def S(C, Q):
     S = Q.dot(C).dot(Q.T)
+    return S
+
+def S_many(C, Q):
+    S = np.empty((len(C), 3, 3))
+    S[:,0,:] = 0.
+    S[:,:,0] = 0.
+    S[:,1,1] = Q[:,1,2]**2. * C[:,2,2] + 2 * Q[:,1,2] * Q[:,1,3] * C[:,2,3] + Q[:,1,3]**2. * C[:,3,3]
+    S[:,2,2] = Q[:,2,2]**2. * C[:,2,2] + 2 * Q[:,2,4] * Q[:,2,2] * C[:,2,4] + Q[:,2,4]**2. * C[:,4,4]
+    S[:,1,2] = Q[:,2,2] * Q[:,1,2] * C[:,2,2] + Q[:,2,2] * Q[:,1,3] * C[:,2,3] + Q[:,2,4] * Q[:,1,2] * C[:,2,4] + Q[:,2,4] * Q[:,1,3] * C[:,3,4]
+    S[:,2,1] = S[:,1,2]
     return S
 
 def rhat(alpha, delta):
