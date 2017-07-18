@@ -133,6 +133,9 @@ def A_many(alphas, deltas):
 def R_inv(A):
     return ICRS_to_galactic.rotationMatrix.dot(A)
 
+def R_inv_many(As):
+    return ICRS_to_galactic.rotationMatrix.dot(As).swapaxes(0, 1)
+
 def v_proj(w, R_inv):
     return R_inv.dot(w)
 

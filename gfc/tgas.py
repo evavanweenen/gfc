@@ -30,7 +30,7 @@ def add_A(t):
     t.add_column(table.Column(data = As, name = "A"))
 
 def add_R(t):
-    R_invs = pmap_np(gen.R_inv, t["A"])
+    R_invs = gen.R_inv_many(t["A"]) 
     t.add_column(table.Column(data = R_invs, name = "R^-1"))
     Rs = np.linalg.inv(R_invs)
     t.add_column(table.Column(data = Rs, name = "R"))
