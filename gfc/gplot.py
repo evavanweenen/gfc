@@ -18,7 +18,6 @@ from .pdf import entropy
 from operator import add
 
 from itertools import cycle
-colourwheel = cycle(['k', 'b', 'g', 'r', 'c', 'm', 'y'])
 symbolwheel = cycle(['o', 'v', 's', '^'])
 
 def show_or_save(saveto = None, fig = None, *args, **kwargs):
