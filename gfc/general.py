@@ -34,22 +34,64 @@ radiantomas = 180. * 3600. * 1000. / np.pi
 ICRS_to_galactic = coords.CoordinateTransformation(coords.Transformations.ICRS2GAL)
 
 def timestamp():
+    """
+    Returns a string with the current Unix time.
+    """
     return str(int(time()))
 
 def covariant_array(cov):
+    """
+    Create a 3x3 covariance array from its unique components.
+    The input must be of length 6, and will be put into the array as follows:
+    cov[0]   cov[1]   cov[2]
+    cov[1]   cov[3]   cov[4]
+    cov[2]   cov[4]   cov[5]
+    """
     return array([[cov[0], cov[1], cov[2]], [cov[1], cov[3], cov[4]], [cov[2], cov[4], cov[5]]])
 
 def XD_arr(t, *cols):
+    """
+    Convert an astropy table to a numpy array
+    
+    Parameters
+    ----------
+    t: astropy.table.table.Table
+        Table to take columns from
+    *cols: str
+        Keys of columns to use
+    """
     tarr = t.as_array()
     return np.column_stack([tarr[col] for col in cols])
 
 def XD(y, e, amplitudes, means, covariances, *args, **kwargs):
-
-    if y.shape != e.shape[:2]:
-        raise Exception("gaia_fc.general.XD: dimensions of y and e do not match: {0} and {1}".format(y.shape, e.shape))
-
-    if not (len(means) == len(covariances) == len(amplitudes)):
-        raise Exception("gaia_fc.general.XD: lengths of initial amplitudes ({0}), means ({1}) and amplitudes ({2}) do not match.".format(len(amplitudes), len(means), len(covariances)))
+    """
+    Apply extreme deconvolution (wrapper)
+    
+    Parameters
+    ----------
+    y: array-like
+        Data to model
+    e: array-like
+        Errors on data
+    amplitudes: array-like
+        Initial estimates of amplitudes of Gaussian components
+    means: array-like
+        Initial estimates of amplitudes of Gaussian components
+    covariances: array-like
+        Initial estimates of covariances of Gaussian components
+    *args, **kwargs:
+        Additional (keyword) arguments to be passed to extreme_deconvolution.extreme_deconvolution
+    
+    Returns
+    -------
+    a, m, c: np.ndarray
+        Amplitudes, means, covariances of Gaussian components in the final model
+    L: float
+        Log-likelihood of the final model
+    """
+    
+    assert y.shape == e.shape[:2], "Dimensions of y and e do not match: {0} and {1}".format(y.shape, e.shape)
+    assert len(means) == len(covariances) == len(amplitudes), "lengths of initial amplitudes ({0}), means ({1}) and amplitudes ({2}) do not match.".format(len(amplitudes), len(means), len(covariances)))
 
     a = np.asfortranarray(amplitudes)
     a = a / np.sum(a)
@@ -70,9 +112,7 @@ def r(x, y, z):
 def A(alpha, delta):
     A1 = array([[cos(alpha), -sin(alpha), 0.], [sin(alpha), cos(alpha), 0.], [0., 0., 1.]])
     A2 = array([[cos(delta), 0., -sin(delta)], [0., 1., 0.], [sin(delta), 0., cos(delta)]])
-
     A = A1.dot(A2)
-
     return A
 
 def R_inv(A):
