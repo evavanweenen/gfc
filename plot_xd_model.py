@@ -22,6 +22,7 @@ parser.add_argument("-n", "--nrlevels", help = "Number of levels in total plot",
 parser.add_argument("--minlevel", help = "(Log) minimum level in total plot", type = float, default = -6.0)
 parser.add_argument("--maxlevel", help = "(Log) maximum level in total plot", type = float, default = -2.7)
 parser.add_argument("-v", "--verbose", action = "store_true")
+parser.add_argument("-t", "--tex", action = "store_true", help = "Write a LaTeX table with the components")
 args = parser.parse_args()
 
 volume = 0.6827
@@ -102,6 +103,9 @@ text(ax1)
 f.savefig(args.saveto_folder+"/PDFs.png")
 plt.close(f)
 
+if args.verbose:
+    print "PDFs plotted"
+
 PDFs = map(gfc.pdf.multivariate, means_xd, covs_xd, amps_xd)
 evalxyz = gfc.pdf.eval_total_PDF(PDFs, [(-140,140), (-130,130), (-72,72)])
 evalxy = evalxyz.sum(2)
@@ -123,29 +127,32 @@ text(ax1)
 f.savefig(args.saveto_folder+"/total.png")
 plt.close(f)
 
-print " - Total plotted"
+if args.verbose:
+    print "Total plotted"
 
-s = []
-s.append(r"\begin{table}[h]")
-s.append(r"\centering")
-s.append(r"\caption{Parameters of the components of the model")# with $K = "+str(K)+r"$ and $w = "+str(w)+"$ km$^2$ s$^{-2}$}")
-s.append(r"\label{t:gc}")
-s.append(r"\begin{adjustbox}{center}")
-s.append(r"\begin{tabular}{rlrrrrrrrrr}")
-s.append(r"\hline\hline")
-s.append(r"$j$ & $\alpha$ & $\unit x \tran \vec m$ & $\unit y \tran \vec m$ & $\unit z \tran \vec m$ & $\unit x \tran \mat V \unit x$ & $\unit y \tran \mat V \unit y$ & $\unit z \tran \mat V \unit z$ & $\unit x \tran \mat V \unit y$  & $\unit x \tran \mat V \unit z$  & $\unit y \tran \mat V \unit z$ \\")
-s.append(r" & & (km s$^{-1}$)& (km s$^{-1}$)& (km s$^{-1}$)& (km$^2$ s$^{-2}$)& (km$^2$ s$^{-2}$)& (km$^2$ s$^{-2}$)& (km$^2$ s$^{-2}$)& (km$^2$ s$^{-2}$)& (km$^2$ s$^{-2}$) \\")
-s.append(r"\hline")
-for j, a, m, c in zip(range(len(amps_xd)), amps_xd, means_xd, covs_xd):
-    l = "{j} & {a:.5f} & {xv:.2f} & {yv:.2f} & {zv:.2f} & {xvx:.2f} & {yvy:.2f} & {zvz:.2f} & {xvy:.2f} & {xvz:.2f} & {yvz:.2f}"
-    l = l.format(j = j+1, a = a, xv = m[0], yv = m[1], zv = m[2], xvx = c[0,0], yvy = c[1,1], zvz = c[2,2], xvy = c[0,1], xvz = c[0,2], yvz = c[1,2])
-    s.append(l + r"\\")
+if args.tex:
+    s = []
+    s.append(r"\begin{table}[h]")
+    s.append(r"\centering")
+    s.append(r"\caption{Parameters of the components of the model")# with $K = "+str(K)+r"$ and $w = "+str(w)+"$ km$^2$ s$^{-2}$}")
+    s.append(r"\label{t:gc}")
+    s.append(r"\begin{adjustbox}{center}")
+    s.append(r"\begin{tabular}{rlrrrrrrrrr}")
+    s.append(r"\hline\hline")
+    s.append(r"$j$ & $\alpha$ & $\unit x \tran \vec m$ & $\unit y \tran \vec m$ & $\unit z \tran \vec m$ & $\unit x \tran \mat V \unit x$ & $\unit y \tran \mat V \unit y$ & $\unit z \tran \mat V \unit z$ & $\unit x \tran \mat V \unit y$  & $\unit x \tran \mat V \unit z$  & $\unit y \tran \mat V \unit z$ \\")
+    s.append(r" & & (km s$^{-1}$)& (km s$^{-1}$)& (km s$^{-1}$)& (km$^2$ s$^{-2}$)& (km$^2$ s$^{-2}$)& (km$^2$ s$^{-2}$)& (km$^2$ s$^{-2}$)& (km$^2$ s$^{-2}$)& (km$^2$ s$^{-2}$) \\")
+    s.append(r"\hline")
+    for j, a, m, c in zip(range(len(amps_xd)), amps_xd, means_xd, covs_xd):
+        l = "{j} & {a:.5f} & {xv:.2f} & {yv:.2f} & {zv:.2f} & {xvx:.2f} & {yvy:.2f} & {zvz:.2f} & {xvy:.2f} & {xvz:.2f} & {yvz:.2f}"
+        l = l.format(j = j+1, a = a, xv = m[0], yv = m[1], zv = m[2], xvx = c[0,0], yvy = c[1,1], zvz = c[2,2], xvy = c[0,1], xvz = c[0,2], yvz = c[1,2])
+        s.append(l + r"\\")
 
-s.append(r"\end{tabular}")
-s.append(r"\end{adjustbox}")
-s.append(r"\end{table}")
+    s.append(r"\end{tabular}")
+    s.append(r"\end{adjustbox}")
+    s.append(r"\end{table}")
 
-s2 = reduce(lambda x, y: x + "\n" + y, s)
-print >> open(args.saveto_folder+"gaia_comp.tex", 'w'), s2
+    s2 = reduce(lambda x, y: x + "\n" + y, s)
+    print >> open(args.saveto_folder+"components.tex", 'w'), s2
 
-print " - Table written"
+    if args.verbose:
+        print " - Table written"
