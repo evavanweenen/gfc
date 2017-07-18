@@ -117,6 +117,11 @@ def A(alpha, delta):
     A = A1.dot(A2)
     return A
 
+def A_new(alpha, delta):
+    ca = cos(alpha) ; sa = sin(alpha) ; cd = cos(delta) ; sd = sin(delta)
+    A = array([[ca * cd, -sa, -ca * sd], [sa * cd, ca, -sa * sd], [sd, 0, cd]])
+    return A
+
 def R_inv(A):
     return ICRS_to_galactic.rotationMatrix.dot(A)
 
