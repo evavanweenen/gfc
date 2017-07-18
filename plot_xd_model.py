@@ -14,8 +14,8 @@ from scipy.stats import chi2
 
 import numpy as np
 
-import argparse
-parser = argparse.ArgumentParser()
+from gfc import ArgumentParser
+parser = ArgumentParser()
 parser.add_argument("xd_results_folder", help = "Folder that contains the XD results")
 parser.add_argument("saveto_folder", help = "Folder in which plot will be saved")
 parser.add_argument("-v", "--verbose", action = "store_true")

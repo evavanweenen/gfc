@@ -4,8 +4,8 @@ Run this script to do it once so it doesn't have to be re-done every time (can b
 """
 
 import gfc
-import argparse
-parser = argparse.ArgumentParser()
+from gfc import ArgumentParser
+parser = ArgumentParser()
 parser.add_argument("data_file", help = "File containing TGAS data")
 parser.add_argument("save_folder", help = "Folder in which results will be saved")
 parser.add_argument("-v", "--verbose", action = "store_true")

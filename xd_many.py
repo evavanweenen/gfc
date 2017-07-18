@@ -4,8 +4,8 @@ Note: several matrices must be pre-calculated, e.g. using the script `xd_calcula
 """
 import gfc
 
-import argparse
-parser = argparse.ArgumentParser()
+from gfc import ArgumentParser
+parser = ArgumentParser()
 parser.add_argument("data_folder", help = "Folder that contains the data")
 parser.add_argument("save_folder", help = "Folder in which results will be saved")
 parser.add_argument("--init_amps", help = "File with initial estimates of amplitudes", default = "Bovy_parameters/Bovy_amps.npy")

@@ -1,8 +1,8 @@
 import numpy as np
-import argparse
+from gfc import ArgumentParser
 import time
 
-parser = argparse.ArgumentParser()
+parser = ArgumentParser()
 parser.add_argument("xd_results_folder", help = "Folder that contains the XD results")
 args = parser.parse_args()
 
