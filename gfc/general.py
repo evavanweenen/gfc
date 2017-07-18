@@ -116,6 +116,20 @@ def A(alpha, delta):
     A = array([[ca * cd, -sa, -ca * sd], [sa * cd, ca, -sa * sd], [sd, 0, cd]])
     return A
 
+def A_many(alphas, deltas):
+    ca = cos(alphas) ; sa = sin(alphas) ; cd = cos(deltas) ; sd = sin(deltas)
+    A = np.empty((len(alphas), 3, 3))
+    A[:,0,0] = ca * cd
+    A[:,0,1] = -sa
+    A[:,0,2] = -ca * sd
+    A[:,1,0] = sa * cd
+    A[:,1,1] = ca
+    A[:,1,2] = -sa * sd
+    A[:,2,0] = sd
+    A[:,2,1] = 0.
+    A[:,2,2] = cd
+    return A
+
 def R_inv(A):
     return ICRS_to_galactic.rotationMatrix.dot(A)
 
