@@ -25,6 +25,16 @@ def univariate(mean, sigma, amplitude = 1.):
     pdf.amp = amplitude
     return pdf
 
+def likelihood_onePDF_onestar(PDF, UVW):
+    L = PDF.pdf(UVW)
+    #L[np.isinf(L)] = np.nan
+    return L
+
+def likelihood_many(PDFs, UVWs):
+    Ls = np.array([PDF.pdf(UVWs) for PDF in PDFs]).T
+    #Ls[np.isinf(Ls)] = np.nan
+    return Ls
+
 def eval_one_PDF(PDF, grid):
     return PDF.amp * PDF.pdf(grid)
 

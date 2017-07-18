@@ -4,14 +4,23 @@ import numpy as np
 from gfc import ArgumentParser
 parser = ArgumentParser()
 parser.add_argument("data_file", help = "File that contains the stellar data")
+parser.add_argument("xd_results_folder", help = "Folder that contains the XD results")
 parser.add_argument("save_folder", help = "Folder in which to save results")
 parser.add_argument("-v", "--verbose", action = "store_true")
+parser.add_argument("-n", help = "Which component to plot", type = int, default = 0)
 args = parser.parse_args()
 
 t = gfc.io.read_csv(args.data_file)
 
 if args.verbose:
     print "Finished loading data"
+
+amps_xd = np.load(args.xd_results_folder+"amplitudes.npy")
+means_xd = np.load(args.xd_results_folder+"means.npy")
+covs_xd = np.load(args.xd_results_folder+"covariances.npy")
+
+if args.verbose:
+    print "Finished loading XD parameters"
 
 gfc.tgas.add_rad(t)
 gfc.tgas.add_w(t)
@@ -22,4 +31,16 @@ gfc.tgas.add_UVW(t)
 if args.verbose:
     print "Calculated U, V, W"
 
-gfc.gplot.density(t["U"], t["W"], bins = 200, r = ((-120, 120), (-70, 70)))
+PDFs = [gfc.pdf.multivariate(m, c, a) for a, m, c in zip(amps_xd, means_xd, covs_xd)]
+Ls = gfc.pdf.likelihood_many(PDFs, t["UVW_vec"])
+    
+if args.verbose:
+    print "Calculated likelihoods"
+
+t.add_column(gfc.table.Column(data = Ls[:, args.n], name = "L"))
+t.sort("L")
+t.reverse()
+gfc.gplot.plt.scatter(t["U"][:250], t["V"][:250])
+gfc.gplot.plt.xlim(-120,120)
+gfc.gplot.plt.ylim(-70,70)
+gfc.gplot.plt.show()
