@@ -19,11 +19,19 @@ def read_data_as_table(loc = "tgas/tgas_all.vot"):
     t.add_columns((ra_rad, ra_rad_err, de_rad, de_rad_err))
     return t
 
+def add_rad(t):
+    ra_rad = np.radians(t["ra"]) ; ra_rad.name = "ra_rad"
+    de_rad = np.radians(t["dec"]); de_rad.name = "dec_rad"
+    ra_rad_err = np.radians(t["ra_error"]/3.6e6) ; ra_rad_err.name = "ra_rad_error"
+    de_rad_err = np.radians(t["dec_error"]/3.6e6) ; de_rad_err.name = "dec_rad_error"
+    t.add_columns((ra_rad, de_rad, ra_rad_err, de_rad_err))
+
 def add_w(t):
     ws = gen.w_many(t["parallax"], t["pmra"], t["pmdec"])
-    t.add_column(table.Column(data = ws[:, 0, 0], name = "w1", unit = "km / s"))
-    t.add_column(table.Column(data = ws[:, 1, 0], name = "w2", unit = "1 / yr"))
-    t.add_column(table.Column(data = ws[:, 2, 0], name = "w3", unit = "1 / yr"))
+    t.add_column(table.Column(data = ws[:, 0], name = "w1", unit = "km / s"))
+    t.add_column(table.Column(data = ws[:, 1], name = "w2", unit = "1 / yr"))
+    t.add_column(table.Column(data = ws[:, 2], name = "w3", unit = "1 / yr"))
+    t.add_column(table.Column(data = ws, name = "w_vec"))
 
 def add_A(t):
     As = gen.A_many(t["ra_rad"], t["dec_rad"]) 
@@ -34,6 +42,13 @@ def add_R(t):
     t.add_column(table.Column(data = R_invs, name = "R^-1"))
     Rs = np.linalg.inv(R_invs)
     t.add_column(table.Column(data = Rs, name = "R"))
+
+def add_UVW(t):
+    UVWs = gen.UVW_wR_many(t["w_vec"], t["R^-1"])
+    t.add_column(table.Column(data = UVWs[:, 0], name = "U", unit = "km / s"))
+    t.add_column(table.Column(data = UVWs[:, 1], name = "V", unit = "km / s"))
+    t.add_column(table.Column(data = UVWs[:, 2], name = "W", unit = "km / s"))
+    t.add_column(table.Column(data = UVWs, name = "UVW_vec", unit = "km / s"))
 
 def C_many(ra, radec, raplx, rapmra, rapmdec, dec, decplx, decpmra, decpmdec, plx, plxpmra, plxpmdec, pmra, pmrapmdec, pmdec):
     C = np.empty((len(ra), 5, 5))

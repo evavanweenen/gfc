@@ -20,11 +20,7 @@ if args.verbose:
     print "Data contains the following keys:"
     print t.keys()
 
-ra_rad = gfc.radians(t["ra"]) ; ra_rad.name = "ra_rad"
-de_rad = gfc.radians(t["dec"]); de_rad.name = "dec_rad"
-ra_rad_err = gfc.radians(t["ra_error"]/3.6e6) ; ra_rad_err.name = "ra_rad_error"
-de_rad_err = gfc.radians(t["dec_error"]/3.6e6) ; de_rad_err.name = "dec_rad_error"
-t.add_columns((ra_rad, de_rad, ra_rad_err, de_rad_err))
+gfc.tgas.add_rad(t)
 t.remove_columns(["solution_id", "random_index", "astrometric_n_obs_al", "astrometric_n_obs_ac", "astrometric_n_good_obs_al", \
                   "astrometric_n_good_obs_ac", "astrometric_n_bad_obs_al", "astrometric_n_bad_obs_ac", "astrometric_delta_q", \
                   "astrometric_excess_noise", "astrometric_excess_noise_sig", "astrometric_primary_flag", \
