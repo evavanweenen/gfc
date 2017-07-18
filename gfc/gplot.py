@@ -40,17 +40,16 @@ def eigsorted(cov):
     vals, vecs = np.linalg.eigh(cov)
     order = vals.argsort()[::-1]
     return vals[order], vecs[:,order]
-def draw_PDF_ellipse(pdf, ax, xyz, volume = 0.6827, **kwargs):
-    assert xyz in ("xy", "xz", "yz"), "gaia_fc.gplot.draw_PDF_ellipse: parameter `xyz` must be one of ('xy', 'xz', 'yz'); received value {0}".format(xyz)
+def draw_PDF_ellipse(ax, amp, mean, cov, xyz, volume = 0.6827, **kwargs):
     choose_from = {"xy": [0, 1], "xz": [0, 2], "yz": [1, 2]}
     pair_int = choose_from[xyz]
-    mean = pdf.mean[pair_int]
-    cov = pdf.cov[pair_int][:, pair_int]
+    mean_ = mean[pair_int]
+    cov_ = cov[pair_int][:, pair_int]
 
-    vals, vecs = eigsorted(cov)
+    vals, vecs = eigsorted(cov_)
     theta = np.degrees(np.arctan2(*vecs[:,0][::-1]))
     width, height = 2 * np.sqrt(chi2.ppf(volume,2)) * np.sqrt(vals)
-    ell = Ellipse(xy = mean, width = width, height = height, angle = theta, facecolor = "None", linewidth = 1 + 7.5*pdf.amp, **kwargs)
+    ell = Ellipse(xy = mean_, width = width, height = height, angle = theta, facecolor = "None", linewidth = 1 + 7.5*amp, **kwargs)
     ax.add_artist(ell)
 
 def PDFs(PDFs, axis, saveto = None, volume = 0.6827, ellipse_kwargs = {}, **kwargs):

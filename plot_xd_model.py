@@ -60,25 +60,6 @@ def set_axes(ax1, ax2, ax3):
     ax1.set_xticks((-100, -50, 0, 50, 100))
     ax1.set_yticks((-100, -50, 0, 50))
 
-def eigsorted(cov):
-    """
-    http://www.nhsilbert.net/source/2014/06/bivariate-normal-ellipse-plotting-in-python/
-    """
-    vals, vecs = np.linalg.eigh(cov)
-    order = vals.argsort()[::-1]
-    return vals[order], vecs[:,order]
-def draw_PDF_ellipse(ax, amp, mean, cov, xyz, volume = 0.6827, **kwargs):
-    choose_from = {"xy": [0, 1], "xz": [0, 2], "yz": [1, 2]}
-    pair_int = choose_from[xyz]
-    mean_ = mean[pair_int]
-    cov_ = cov[pair_int][:, pair_int]
-
-    vals, vecs = eigsorted(cov_)
-    theta = np.degrees(np.arctan2(*vecs[:,0][::-1]))
-    width, height = 2 * np.sqrt(chi2.ppf(volume,2)) * np.sqrt(vals)
-    ell = Ellipse(xy = mean_, width = width, height = height, angle = theta, facecolor = "None", linewidth = 1 + 7.5*amp, **kwargs)
-    ax.add_artist(ell)
-
 amps_xd = np.load(args.xd_results_folder+"amplitudes.npy")
 means_xd = np.load(args.xd_results_folder+"means.npy")
 covs_xd = np.load(args.xd_results_folder+"covariances.npy")
@@ -94,9 +75,9 @@ ax3 = plt.subplot(gs1[-1, 2:])
 set_axes(ax1, ax2, ax3)
 
 for a, m, c in zip(amps_xd, means_xd, covs_xd):
-    draw_PDF_ellipse(ax1, a, m, c, "xy", edgecolor="0.4")
-    draw_PDF_ellipse(ax2, a, m, c, "xz", edgecolor="0.4")
-    draw_PDF_ellipse(ax3, a, m, c, "yz", edgecolor="0.4")
+    gfc.gplot.draw_PDF_ellipse(ax1, a, m, c, "xy", edgecolor="0.4")
+    gfc.gplot.draw_PDF_ellipse(ax2, a, m, c, "xz", edgecolor="0.4")
+    gfc.gplot.draw_PDF_ellipse(ax3, a, m, c, "yz", edgecolor="0.4")
 
 text(ax1)
 
