@@ -28,7 +28,7 @@ def add_w(t):
     t.add_column(table.Column(data = ws[:, 2, 0], name = "w3", unit = "1 / yr"))
 
 def add_A(t):
-    As = map_np(gen.A, t["ra_rad"], t["dec_rad"])
+    As = gen.A_many(t["ra_rad"], t["dec_rad"]) 
     t.add_column(table.Column(data = As, name = "A"))
 
 def add_R(t):
