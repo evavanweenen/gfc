@@ -29,6 +29,8 @@ from astropy import table
 
 from time import time
 
+from argparse import ArgumentParser
+
 radiantomas = 180. * 3600. * 1000. / np.pi
 
 ICRS_to_galactic = coords.CoordinateTransformation(coords.Transformations.ICRS2GAL)
@@ -91,7 +93,7 @@ def XD(y, e, amplitudes, means, covariances, *args, **kwargs):
     """
     
     assert y.shape == e.shape[:2], "Dimensions of y and e do not match: {0} and {1}".format(y.shape, e.shape)
-    assert len(means) == len(covariances) == len(amplitudes), "lengths of initial amplitudes ({0}), means ({1}) and amplitudes ({2}) do not match.".format(len(amplitudes), len(means), len(covariances)))
+    assert len(means) == len(covariances) == len(amplitudes), "lengths of initial amplitudes ({0}), means ({1}) and amplitudes ({2}) do not match.".format(len(amplitudes), len(means), len(covariances))
 
     a = np.asfortranarray(amplitudes)
     a = a / np.sum(a)
