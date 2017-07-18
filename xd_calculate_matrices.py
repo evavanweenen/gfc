@@ -13,6 +13,7 @@ args = parser.parse_args()
 
 if args.verbose:
     print "Now reading data..."
+time_before_reading = gfc.time()
 t = gfc.io.read_csv(args.data_file) # ASSUME CSV -- todo: check
 if args.verbose:
     print "{0} lines in data".format(len(t))
@@ -31,9 +32,11 @@ t.remove_columns(["solution_id", "random_index", "astrometric_n_obs_al", "astrom
                   "matched_observations", "duplicated_source", "scan_direction_strength_k1", "scan_direction_strength_k2", \
                   "scan_direction_strength_k3", "scan_direction_strength_k4", "scan_direction_mean_k1", "scan_direction_mean_k2", \
                   "scan_direction_mean_k3", "scan_direction_mean_k4", "phot_g_n_obs", "phot_g_mean_flux", "phot_g_mean_flux_error"])
+time_after_reading = gfc.time()
 if args.verbose:
-    print "Read TGAS data"
+    print "Read TGAS data in {0:.1f} seconds".format(time_after_reading - time_before_reading)
 
+time_before_matrices = gfc.time()
 gfc.tgas.add_w(t)
 if args.verbose:
     print "Added w"
@@ -57,7 +60,12 @@ if args.verbose:
 gfc.tgas.add_S(t)
 if args.verbose:
     print "Added S"
-
-gfc.io.write_table_with_separate_arrays(t, saveto_folder = args.save_folder)
+time_after_matrices = gfc.time()
 if args.verbose:
-    print "Saved results"
+    print "Calculated matrices in {0:.1f} seconds".format(time_after_matrices - time_before_matrices)
+
+time_before_writing = gfc.time()
+gfc.io.write_table_with_separate_arrays(t, saveto_folder = args.save_folder)
+time_after_writing = gfc.time()
+if args.verbose:
+    print "Written in {0:.1f} seconds".format(time_after_writing - time_before_writing)
