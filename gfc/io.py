@@ -60,14 +60,14 @@ def remove_array_columns_from_table(t):
     new_t.remove_columns(remove_columns)
     return new_t
 
-def write_table_without_arrays(t, saveto, format="ascii.fixed_width", exclude_cols=[], *args, **kwargs):
+def write_table_without_arrays(t, saveto, format="ascii.fast_csv", exclude_cols=[], *args, **kwargs):
     new_t = t.copy()
     assert all(col in new_t.keys() for col in exclude_cols), "gaia_fc.general.write_table_without_arrays: columns {0} cannot be excluded because they are not in the table".format([col for col in exclude_cols if col not in new_t.keys()])
     new_t.remove_columns(exclude_cols)
     new_t = remove_array_columns_from_table(new_t)
     new_t.write(saveto, format=format, *args, **kwargs)
 
-def write_table_with_separate_arrays(t, saveto_folder, format="ascii.fixed_width", exclude_cols=[], *args, **kwargs):
+def write_table_with_separate_arrays(t, saveto_folder, format="ascii.fast_csv", exclude_cols=[], *args, **kwargs):
     t_no_arr = remove_array_columns_from_table(t)
     arrays   = find_array_columns(t)
     assert "table" not in arrays, "gaia_fc.io.write_table_with_separate_arrays: There is a column named `table` in your table, which cannot be written out"
