@@ -112,12 +112,6 @@ def r(x, y, z):
     return np.sqrt(x**2 + y**2 + z**2)
 
 def A(alpha, delta):
-    A1 = array([[cos(alpha), -sin(alpha), 0.], [sin(alpha), cos(alpha), 0.], [0., 0., 1.]])
-    A2 = array([[cos(delta), 0., -sin(delta)], [0., 1., 0.], [sin(delta), 0., cos(delta)]])
-    A = A1.dot(A2)
-    return A
-
-def A_new(alpha, delta):
     ca = cos(alpha) ; sa = sin(alpha) ; cd = cos(delta) ; sd = sin(delta)
     A = array([[ca * cd, -sa, -ca * sd], [sa * cd, ca, -sa * sd], [sd, 0, cd]])
     return A
