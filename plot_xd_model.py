@@ -18,11 +18,14 @@ from gfc import ArgumentParser
 parser = ArgumentParser()
 parser.add_argument("xd_results_folder", help = "Folder that contains the XD results")
 parser.add_argument("saveto_folder", help = "Folder in which plot will be saved")
+parser.add_argument("-n", "--nrlevels", help = "Number of levels in total plot", type = int, default = 12)
+parser.add_argument("--minlevel", help = "(Log) minimum level in total plot", type = float, default = -6.0)
+parser.add_argument("--maxlevel", help = "(Log) maximum level in total plot", type = float, default = -2.7)
 parser.add_argument("-v", "--verbose", action = "store_true")
 args = parser.parse_args()
 
 volume = 0.6827
-levels = np.logspace(-6, -2.7, 12)
+levels = np.logspace(args.minlevel, args.maxlevel, args.nrlevels)
 
 def text(ax1):
     ax1.text(60, -90, "Arcturus")
