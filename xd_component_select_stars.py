@@ -48,9 +48,9 @@ print Ls.min(axis = 0)
 print np.mean(Ls, axis = 0)
 print np.median(Ls, axis = 0)
 
-t_subs = [t[Ls[:,n] < -9] for n in range(len(means_xd))]
+t_subs = [t[Ls[:,n] > -9] for n in range(len(means_xd))]
 for n, t_ in enumerate(t_subs):
     print n, len(t_)
-    gfc.gplot.density(t_["U"], t_["V"], r = ((-130, 130), (-120, 60)), saveto = "UV_{0}.png".format(n))
-    gfc.gplot.density(t_["ra"], t_["dec"], r = ((0, 360), (-90, 90)), saveto = "radec_{0}.png".format(n))
-    gfc.gplot.density(t_["l"], t_["b"], r = ((0, 360), (-90, 90)), saveto = "lb_{0}.png".format(n))
+    gfc.gplot.density(t_["U"], t_["V"], r = ((-130, 130), (-120, 60)), bins=100, saveto = "UV_{0}.png".format(n))
+    gfc.gplot.density(t_["ra"], t_["dec"], r = ((0, 360), (-90, 90)), bins=100,  saveto = "radec_{0}.png".format(n))
+    gfc.gplot.density(t_["l"], t_["b"], r = ((0, 360), (-90, 90)), bins=100, saveto = "lb_{0}.png".format(n))
