@@ -380,7 +380,7 @@ def S2V(VR, S2R, VM, S2M, VcoevR, VcoevM, saveto=None):
     show_or_save(saveto, f)
     plt.close(f)
 
-def moving_group(ra, dec, l, b, U, V, W, ind_in, ind_ex, a = None, m = None, c = None, saveto = None, **kwargs):
+def moving_group(ra, dec, l, b, U, V, W, ind_in, ind_ex = None, met = None, alpha = None, a = None, m = None, c = None, saveto = None, **kwargs):
     fig, axs = plt.subplots(2, 3, figsize = (15, 10), tight_layout = True)
     density_ax(axs[0,0], U[ind_in], V[ind_in], r = ((-130, 130), (-130, 130)), **kwargs)
     density_ax(axs[0,1], U[ind_in], W[ind_in], r = ((-130, 130), (-130, 130)), **kwargs)
@@ -391,5 +391,8 @@ def moving_group(ra, dec, l, b, U, V, W, ind_in, ind_ex, a = None, m = None, c =
         draw_PDF_ellipse(axs[0,2], a, m, c, "yz", zorder = 1000)
     density_ax(axs[1,0], ra[ind_in], dec[ind_in], r = ((0, 360), (-90, 90)),**kwargs)
     density_ax(axs[1,1], l[ind_in], b[ind_in], r = ((0, 360), (-90, 90)), **kwargs)
-    density_ax(axs[1,2], l[ind_ex], b[ind_ex], r = ((0, 360), (-90, 90)), **kwargs)
+    if met is not None and alpha is not None:
+        density_ax(axs[1,2], met[ind_in], alpha[ind_in], r = ((-2, 1), (-1, 1)), **kwargs)
+    elif ind_ex is not None:
+        density_ax(axs[1,2], l[ind_ex], b[ind_ex], r = ((0, 360), (-90, 90)), **kwargs)
     show_or_save(saveto, fig)
