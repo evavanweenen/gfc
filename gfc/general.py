@@ -21,7 +21,6 @@ from scipy.stats import norm, multivariate_normal as m_n, scoreatpercentile
 
 from pygaia.astrometry.vectorastrometry import phaseSpaceToAstrometry as toastro, normalTriad, astrometryToPhaseSpace as tophase, sphericalToCartesian as tocart
 from pygaia.astrometry import coordinates as coords
-from pygaia.astrometry.constants import auKmYearPerSec as k
 
 from extreme_deconvolution import extreme_deconvolution as xd
 
@@ -108,117 +107,15 @@ def XD(y, e, amplitudes, means, covariances, *args, **kwargs):
 
     return a, m, c, L
 
+def add_rad(t, ra_col = "ra", dec_col = "dec", ra_rad_col = "ra_rad", dec_rad_col = "dec_rad", error_suffix = "_error"):
+    ra_rad = np.radians(t[ra_col]) ; ra_rad.name = ra_rad_col
+    de_rad = np.radians(t[dec_col]); de_rad.name = dec_rad_col
+    ra_rad_err = np.radians(t[ra_col+error_suffix]/3.6e6) ; ra_rad_err.name = ra_rad_col+error_suffix
+    de_rad_err = np.radians(t[dec_col+error_suffix]/3.6e6) ; de_rad_err.name = dec_rad_col+error_suffix
+    t.add_columns((ra_rad, de_rad, ra_rad_err, de_rad_err))
+
 def r(x, y, z):
     return np.sqrt(x**2 + y**2 + z**2)
-
-def A(alpha, delta):
-    ca = cos(alpha) ; sa = sin(alpha) ; cd = cos(delta) ; sd = sin(delta)
-    A = array([[ca * cd, -sa, -ca * sd], [sa * cd, ca, -sa * sd], [sd, 0, cd]])
-    return A
-
-def A_many(alphas, deltas):
-    ca = cos(alphas) ; sa = sin(alphas) ; cd = cos(deltas) ; sd = sin(deltas)
-    A = np.empty((len(alphas), 3, 3))
-    A[:,0,0] = ca * cd
-    A[:,0,1] = -sa
-    A[:,0,2] = -ca * sd
-    A[:,1,0] = sa * cd
-    A[:,1,1] = ca
-    A[:,1,2] = -sa * sd
-    A[:,2,0] = sd
-    A[:,2,1] = 0.
-    A[:,2,2] = cd
-    return A
-
-def R_inv(A):
-    return ICRS_to_galactic.rotationMatrix.dot(A)
-
-def R_inv_many(As):
-    return ICRS_to_galactic.rotationMatrix.dot(As).swapaxes(0, 1)
-
-def v_proj(w, R_inv):
-    return R_inv.dot(w)
-
-def w(delta, parallax, mu_alpha, mu_delta, v_r):
-    el1 = v_r
-    el2 = (k / parallax) * mu_alpha * np.cos(delta)
-    el3 = (k / parallax) * mu_delta
-    w = array([[el1], [el2], [el3]]) # double [] to make it a column vector
-    return w
-
-def w_star(parallax, mu_alpha_star, mu_delta, v_r = 0):
-    el1 = v_r
-    el2 = (k / parallax) * mu_alpha_star
-    el3 = (k / parallax) * mu_delta
-    w = array([[el1], [el2], [el3]])
-    return w
-
-def w_many(parallax, mu_alpha_star, mu_delta, v_r = 0):
-    w = np.empty((len(parallax), 3))
-    w[:,0] = v_r
-    w[:,1] = k / parallax * mu_alpha_star
-    w[:,2] = k / parallax * mu_delta
-    return w
-
-def UVW_wR(w, Rinv):
-    return Rinv.dot(w)
-
-def UVW_wR_many(w, Rinv):
-    UVW = np.empty((len(w), 3))
-    UVW[:,0] = w[:,0].T * Rinv[:,0,0] + w[:,1].T * Rinv[:,0,1] + w[:,2].T * Rinv[:,0,2]
-    UVW[:,1] = w[:,0].T * Rinv[:,1,0] + w[:,1].T * Rinv[:,1,1] + w[:,2].T * Rinv[:,1,2]
-    UVW[:,2] = w[:,0].T * Rinv[:,2,0] + w[:,1].T * Rinv[:,2,1] + w[:,2].T * Rinv[:,2,2]
-    return UVW
-
-def Q_star(parallax, mu_alpha_star, mu_delta):
-    Q = array([[0., 0., 0.                               , 0.        , 0.        ],
-               [0., 0., -k/(parallax**2.) * mu_alpha_star, k/parallax, 0.        ],
-               [0., 0., -k/(parallax**2.) * mu_delta     , 0.        , k/parallax]])
-
-    return Q
-
-def Q_star_many(parallax, mu_alpha_star, mu_delta):
-    Q = np.empty((len(parallax), 3, 5))
-    Q[:,0,:] = 0.
-    Q[:,:,:2] = 0.
-    Q[:,1,2] = -k/(parallax**2.) * mu_alpha_star
-    Q[:,1,3] = k/parallax
-    Q[:,1,4] = 0.
-    Q[:,2,2] = -k/(parallax**2.) * mu_delta     
-    Q[:,2,3] = 0.
-    Q[:,2,4] = k/parallax
-    return Q
-
-def S(C, Q):
-    S = Q.dot(C).dot(Q.T)
-    return S
-
-def S_many(C, Q):
-    S = np.empty((len(C), 3, 3))
-    S[:,0,:] = 0.
-    S[:,:,0] = 0.
-    S[:,1,1] = Q[:,1,2]**2. * C[:,2,2] + 2 * Q[:,1,2] * Q[:,1,3] * C[:,2,3] + Q[:,1,3]**2. * C[:,3,3]
-    S[:,2,2] = Q[:,2,2]**2. * C[:,2,2] + 2 * Q[:,2,4] * Q[:,2,2] * C[:,2,4] + Q[:,2,4]**2. * C[:,4,4]
-    S[:,1,2] = Q[:,2,2] * Q[:,1,2] * C[:,2,2] + Q[:,2,2] * Q[:,1,3] * C[:,2,3] + Q[:,2,4] * Q[:,1,2] * C[:,2,4] + Q[:,2,4] * Q[:,1,3] * C[:,3,4]
-    S[:,2,1] = S[:,1,2]
-    return S
-
-def rhat(alpha, delta):
-    return tocart(1., alpha, delta)
-
-def R_r(rhat):
-    """
-    Assumes rhat is a row vector [rhat1, rhat2, rhat3]
-    """
-    n = rhat[:, np.newaxis]
-    return n.dot(n.T)
-
-def R_t(rhat):
-    """
-    Assumes rhat is a row vector [rhat1, rhat2, rhat3]
-    """
-    n = rhat[:, np.newaxis]
-    return np.identity(len(n)) - n.dot(n.T)
 
 def radial_velocity_distribution(PDFs, ra, dec, plx, mura, mudec, C, x = np.arange(-500., 500., 0.0025), v_r_err = 0.):
 

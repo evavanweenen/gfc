@@ -21,7 +21,7 @@ if args.verbose:
     print "Data contains the following keys:"
     print t.keys()
 
-gfc.tgas.add_rad(t)
+gfc.add_rad(t)
 if args.remove_columns:
     gfc.remove_unused_columns(t)
 time_after_reading = gfc.time()
@@ -29,12 +29,12 @@ if args.verbose:
     print "Read TGAS data in {0:.1f} seconds".format(time_after_reading - time_before_reading)
 
 time_before_matrices = gfc.time()
-gfc.tgas.add_w(t)
-gfc.tgas.add_A(t)
-gfc.tgas.add_R(t)
+gfc.matrix.add_w(t)
+gfc.matrix.add_A(t)
+gfc.matrix.add_R(t)
 gfc.tgas.add_C(t)
-gfc.tgas.add_Q(t)
-gfc.tgas.add_S(t)
+gfc.matrix.add_Q(t)
+gfc.matrix.add_S(t)
 time_after_matrices = gfc.time()
 if args.verbose:
     print "Added w, A, R, C, Q, S in {0:.1f} seconds".format(time_after_matrices - time_before_matrices)

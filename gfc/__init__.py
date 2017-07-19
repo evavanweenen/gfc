@@ -7,6 +7,8 @@ gfc.tgas
     Functions specific to the TGAS dataset
 gfc.pdf
     Functions for dealing with probability density functions (PDFs)
+gfc.matrix
+    Functions for dealing with A,R,Q,S etc matrices (as defined in Bovy et al. 2009)
 gfc.io
     Functions for input and output, to file and to screen
 gfc.mapping
@@ -18,6 +20,7 @@ gfc.general:
 """
 from . import tgas
 from . import pdf
+from . import matrix
 from . import io
 from . import mapping
 from . import gplot
