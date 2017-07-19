@@ -32,23 +32,34 @@ gfc.tgas.add_UVW(t)
 if args.verbose:
     print "Calculated U, V, W"
 
-PDFs = [gfc.pdf.multivariate(m, c, a) for a, m, c in zip(amps_xd, means_xd, covs_xd)]
-Ls = gfc.pdf.likelihood_many(PDFs, t["UVW_vec"])
-    
+#PDFs = [gfc.pdf.multivariate(m, c, a) for a, m, c in zip(amps_xd, means_xd, covs_xd)]
+#Ls = gfc.pdf.likelihood_many(PDFs, t["UVW_vec"])
+
+Ls = gfc.pdf.loglikelihood_many_multiPDF(means_xd, covs_xd, t["UVW_vec"])
+
+
 if args.verbose:
     print "Calculated likelihoods"
 
+print Ls.shape
+
+print Ls.max(axis = 0)
+print Ls.min(axis = 0)
+print np.mean(Ls, axis = 0)
+print np.median(Ls, axis = 0)
+
+print [len(np.where(Ls[:,i] > -10.)[0]) for i in range(len(means_xd))]
+
+t.sort("source_id")
+
 for n in range(19):
-    t.add_column(gfc.table.Column(data = Ls[:, n], name = "L"))
-    t.sort("L")
-    t.reverse()
-    gfc.gplot.plt.hist2d(t["U"][:5000], t["W"][:5000], range = ((-120, 120), (-70, 70)), bins = 100)
-    gfc.gplot.plt.xlim(-120,120)
-    gfc.gplot.plt.ylim(-70,70)
-    gfc.gplot.draw_PDF_ellipse(gfc.gplot.plt.gca(), amps_xd[n], means_xd[n], covs_xd[n], "xz")
+    print n
+    gfc.gplot.plt.hist2d(t["U"][Ls[:,n] > -9.], t["V"][Ls[:,n] > -9.], range = ((-130, 130), (-120, 60)), bins = 125)
+    gfc.gplot.plt.xlim(-130,130)
+    gfc.gplot.plt.ylim(-120,60)
+    gfc.gplot.draw_PDF_ellipse(gfc.gplot.plt.gca(), amps_xd[n], means_xd[n], covs_xd[n], "xy")
     gfc.gplot.plt.savefig(args.save_folder + "stars_{n}.png".format(n = n))
     gfc.gplot.plt.close()
-    t.remove_column("L")
 #for N in range(19):
 #    Ls[:,N] = np.log(Ls[:,N])
 #    print "{N}: min {min:.1f} ; median {median:.1f} ; 95% {ten:.1f} ; max {max:.1f} ".format(N = N, max = np.nanmax(Ls[:,N]), min = np.nanmin(Ls[:,N]), median = np.median(Ls[:,N]), ten = np.percentile(Ls[:,N], 95))
