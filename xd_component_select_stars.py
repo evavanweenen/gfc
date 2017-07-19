@@ -7,7 +7,7 @@ parser.add_argument("data_file", help = "File that contains the stellar data")
 parser.add_argument("xd_results_folder", help = "Folder that contains the XD results")
 parser.add_argument("save_folder", help = "Folder in which to save results")
 parser.add_argument("-v", "--verbose", action = "store_true")
-parser.add_argument("-t", "--threshold", help = "-1 * Log-likelihood threshold for component membership", default = 9, type = int)
+parser.add_argument("-t", "--threshold", help = "-1 * Log-likelihood threshold for component membership", default = 9.0, type = float)
 args = parser.parse_args()
 
 t = gfc.io.read_csv(args.data_file)
@@ -41,6 +41,6 @@ for n, (a, m, c) in enumerate(zip(amps_xd, means_xd, covs_xd)):
     indices_in = np.where(Ls[:,n] > -args.threshold)[0]
     indices_ex = np.where(Ls[:,n] <= -args.threshold)[0]
     if args.verbose:
-        print "{n:02d}: {l}".format(n=n, l=len(indices_in))
+        print "{n:02d}: {l}".format(n=n+1, l=len(indices_in))
     gfc.gplot.moving_group(t["ra"], t["dec"], t["l"], t["b"], t["U"], t["V"], t["W"], indices_in, indices_ex, \
         a = a, m = m, c = c, bins = 100, saveto = "{f}/{n:02d}_mg.png".format(f = args.save_folder, n = n+1)) 
