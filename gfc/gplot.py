@@ -391,5 +391,5 @@ def moving_group(ra, dec, l, b, U, V, W, ind_in, ind_ex, a = None, m = None, c =
         draw_PDF_ellipse(axs[0,2], a, m, c, "yz", zorder = 1000)
     density_ax(axs[1,0], ra[ind_in], dec[ind_in], r = ((0, 360), (-90, 90)),**kwargs)
     density_ax(axs[1,1], l[ind_in], b[ind_in], r = ((0, 360), (-90, 90)), **kwargs)
-    density_ax(axs[1,1], l[ind_ex], b[ind_ex], r = ((0, 360), (-90, 90)), **kwargs)
+    density_ax(axs[1,2], l[ind_ex], b[ind_ex], r = ((0, 360), (-90, 90)), **kwargs)
     show_or_save(saveto, fig)
