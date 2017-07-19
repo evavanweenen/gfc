@@ -52,6 +52,9 @@ def read_csv(*args, **kwargs):
     t = read_ascii(*args, format="csv", **kwargs)
     return t
 
+def write_csv(t, saveto, overwrite = True, *args, **kwargs):
+    t.write(saveto, format = "ascii.fast_csv", overwrite = overwrite, *args, **kwargs)
+
 def find_array_columns(t):
     return [col for col in t.keys() if t[col].shape[1:]]
 def remove_array_columns_from_table(t):
@@ -60,12 +63,12 @@ def remove_array_columns_from_table(t):
     new_t.remove_columns(remove_columns)
     return new_t
 
-def write_table_without_arrays(t, saveto, format="ascii.fast_csv", exclude_cols=[], *args, **kwargs):
+def write_table_without_arrays(t, saveto, exclude_cols=[], *args, **kwargs):
     new_t = t.copy()
     assert all(col in new_t.keys() for col in exclude_cols), "gaia_fc.general.write_table_without_arrays: columns {0} cannot be excluded because they are not in the table".format([col for col in exclude_cols if col not in new_t.keys()])
     new_t.remove_columns(exclude_cols)
     new_t = remove_array_columns_from_table(new_t)
-    new_t.write(saveto, format=format, *args, **kwargs)
+    write_csv(new_t, saveto, *args, **kwargs)
 
 def write_table_with_separate_arrays(t, saveto_folder, format="ascii.fast_csv", exclude_cols=[], verbose = True, *args, **kwargs):
     t_no_arr = remove_array_columns_from_table(t)
@@ -80,7 +83,7 @@ def write_table_with_separate_arrays(t, saveto_folder, format="ascii.fast_csv", 
         if verbose:
             print arr_key,
             flush()
-    t_no_arr.write("{0}/table.csv".format(saveto_folder), format=format, overwrite=True, *args, **kwargs)
+    write_csv(t_no_arr, "{0}/table.csv".format(saveto_folder), overwrite = overwrite, *args, **kwargs)
     if verbose:
         print ""
 
