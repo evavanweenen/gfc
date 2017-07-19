@@ -6,6 +6,7 @@ parser.add_argument("tmass_file", help = "File containing the TGAS/2MASS table")
 parser.add_argument("rave_file", help = "File containing the RAVE table")
 parser.add_argument("save_to", help = "Location to save cross-matched table to")
 parser.add_argument("-v", "--verbose", action = "store_true")
+parser.add_argument("-r", "--remove_columns", action = "store_true")
 args = parser.parse_args()
 
 if args.verbose:
@@ -31,6 +32,8 @@ if args.verbose:
 joinedtable = gfc.table.join(rave, t, keys="ID_TYCHO2")
 if args.verbose:
     print "Cross-match done"
+if args.remove_columns:
+    gfc.remove_unused_columns(joinedtable)
 gfc.io.write_csv(joinedtable, args.save_to)
 if args.verbose:
     print "Cross-matched table written"
