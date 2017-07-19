@@ -21,13 +21,7 @@ if args.verbose:
     print t.keys()
 
 gfc.tgas.add_rad(t)
-t.remove_columns(["solution_id", "random_index", "astrometric_n_obs_al", "astrometric_n_obs_ac", "astrometric_n_good_obs_al", \
-                  "astrometric_n_good_obs_ac", "astrometric_n_bad_obs_al", "astrometric_n_bad_obs_ac", "astrometric_delta_q", \
-                  "astrometric_excess_noise", "astrometric_excess_noise_sig", "astrometric_primary_flag", \
-                  "astrometric_relegation_factor", "astrometric_weight_al", "astrometric_weight_ac", "astrometric_priors_used", \
-                  "matched_observations", "duplicated_source", "scan_direction_strength_k1", "scan_direction_strength_k2", \
-                  "scan_direction_strength_k3", "scan_direction_strength_k4", "scan_direction_mean_k1", "scan_direction_mean_k2", \
-                  "scan_direction_mean_k3", "scan_direction_mean_k4", "phot_g_n_obs", "phot_g_mean_flux", "phot_g_mean_flux_error"])
+gfc.remove_unused_columns(t)
 time_after_reading = gfc.time()
 if args.verbose:
     print "Read TGAS data in {0:.1f} seconds".format(time_after_reading - time_before_reading)
