@@ -365,3 +365,21 @@ def rse(x):
     """
     rse = 0.390152*(scoreatpercentile(x,90)-scoreatpercentile(x,10))
     return rse
+
+def remove_unused_columns(t):
+    cols = ["solution_id", "random_index", "astrometric_n_obs_al", "astrometric_n_obs_ac", "astrometric_n_good_obs_al", \
+           "astrometric_n_good_obs_ac", "astrometric_n_bad_obs_al", "astrometric_n_bad_obs_ac", "astrometric_delta_q", \
+           "astrometric_excess_noise", "astrometric_excess_noise_sig", "astrometric_primary_flag", \
+           "astrometric_relegation_factor", "astrometric_weight_al", "astrometric_weight_ac", "astrometric_priors_used", \
+           "matched_observations", "duplicated_source", "scan_direction_strength_k1", "scan_direction_strength_k2", \
+           "scan_direction_strength_k3", "scan_direction_strength_k4", "scan_direction_mean_k1", "scan_direction_mean_k2", \
+           "scan_direction_mean_k3", "scan_direction_mean_k4", "phot_g_n_obs", "phot_g_mean_flux", "phot_g_mean_flux_error"]
+    try:
+        t.remove_columns(cols)
+    except:
+        for c in cols:
+            try:
+                t.remove_column(c)
+            except:
+                pass
+   
