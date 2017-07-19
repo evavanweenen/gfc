@@ -98,19 +98,6 @@ def PDFs_multi(PDFs, saveto = None, volume = 0.6827, title = "Gaussians", **kwar
     finally:
         plt.close("all")
 
-def PDFs_onefig(PDFs, saveto = None, volume = 0.6827, title = "Gaussians" , **kwargs):
-    f = plt.figure()
-
-    plt.suptitle("GridSpec w/ different subplotpars")
-
-    gs1 = GridSpec(3, 3)
-    gs1.update(left=0.05, right=0.95, wspace=0.05)
-    ax1 = plt.subplot(gs1[:-1, :])
-    ax2 = plt.subplot(gs1[-1, :-1])
-    ax3 = plt.subplot(gs1[-1, -1])
-    
-    f.show()
-
 def select_colourmap(name=None, default="jet"):
     try:
         cm = plt.cm.__dict__[name]
@@ -156,6 +143,26 @@ def density(x, y, saveto=None, bins=500, cb = False, flip="", log = True, cmap="
         show_or_save(saveto)
     finally:
         plt.close()
+
+def density_ax(ax, x, y, bins=500, cb = False, flip="", log = True, cmap="viridis", r=None, grid=False, histkwargs={}, **kwargs):
+    norm = LogNorm() if log else None
+    cm = select_colourmap(cmap)
+    _ = ax.hist2d(x, y, bins=bins, cmap=cm, range = r, norm = norm, **histkwargs) ; del _
+    #if cb:
+    #    plt.colorbar(pad = 0.01)
+    ax.grid(grid)
+    ax.axis("tight")
+    if "x" in flip:
+        ax.invert_xaxis()
+    if "y" in flip:
+        ax.invert_yaxis()
+    try:
+        ax.set_xlabel(x.name)
+        ax.set_ylabel(y.name)
+    except:
+        pass
+    if kwargs:
+        plt.setp(ax, **kwargs)
 
 def RV_distribution(v_r, p_v_r, saveto=None, name=None, real_vr=None, entropy_text=True, labels=None, **kwargs):
     try:
@@ -372,3 +379,15 @@ def S2V(VR, S2R, VM, S2M, VcoevR, VcoevM, saveto=None):
     axR.set_yticks((5,10,15,20,25,30))
     show_or_save(saveto, f)
     plt.close(f)
+
+def moving_group(ra, dec, l, b, U, V, W, amplitude, mean, covariance, saveto = None, **kwargs):
+    fig, axs = plt.subplots(2, 3, figsize = (15, 10), tight_layout = True)
+    density_ax(axs[0,0], U, V, r = ((-130, 130), (-130, 130)), **kwargs)
+    draw_PDF_ellipse(axs[0,0], amplitude, mean, covariance, "xy", zorder = 1000)
+    density_ax(axs[0,1], U, W, r = ((-130, 130), (-130, 130)), **kwargs)
+    draw_PDF_ellipse(axs[0,1], amplitude, mean, covariance, "xz", zorder = 1000)
+    density_ax(axs[0,2], V, W, r = ((-130, 130), (-130, 130)), **kwargs)
+    draw_PDF_ellipse(axs[0,2], amplitude, mean, covariance, "yz", zorder = 1000)
+    density_ax(axs[1,0], ra, dec, r = ((0, 360), (-90, 90)),**kwargs)
+    density_ax(axs[1,1], l, b, r = ((0, 360), (-90, 90)), **kwargs)
+    show_or_save(saveto, fig)
