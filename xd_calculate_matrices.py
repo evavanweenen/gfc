@@ -28,31 +28,14 @@ if args.verbose:
 
 time_before_matrices = gfc.time()
 gfc.tgas.add_w(t)
-if args.verbose:
-    print "Added w"
-
 gfc.tgas.add_A(t)
-if args.verbose:
-    print "Added A"
-
 gfc.tgas.add_R(t)
-if args.verbose:
-    print "Added R and R^-1"
-
 gfc.tgas.add_C(t)
-if args.verbose:
-    print "Added C"
-
 gfc.tgas.add_Q(t)
-if args.verbose:
-    print "Added Q"
-
 gfc.tgas.add_S(t)
-if args.verbose:
-    print "Added S"
 time_after_matrices = gfc.time()
 if args.verbose:
-    print "Calculated matrices in {0:.1f} seconds".format(time_after_matrices - time_before_matrices)
+    print "Added w, A, R, C, Q, S in {0:.1f} seconds".format(time_after_matrices - time_before_matrices)
 
 time_before_writing = gfc.time()
 gfc.io.write_table_with_separate_arrays(t, saveto_folder = args.save_folder, verbose = args.verbose)
