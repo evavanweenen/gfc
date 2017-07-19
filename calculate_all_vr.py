@@ -1,38 +1,16 @@
 """
 Predict radial velocities for stars using a model from XD
+
+NOTE: NOT CURRENTLY USABLE
 """
 
 import gaia_fc as g
-import sys
-K = int(sys.argv[1])
-
-try:
-    t = g.io.read("tgas/RAVE/crossmatch.txt", format="fixed_width")
-    t["C"] = g.np.load("tgas/RAVE/C.npy")
-    print "Loaded joined table"
-except:
-    print "Now loading 2MASS table"
-    t = g.io.load_table_with_separate_arrays(saveto_folder="tgas/2MASS/results/")
-    t.remove_columns(("R", "Q", "S", "A", "R^-1", "w1", "w2", "w3"))
-    t.rename_column("tycho2_id", "ID_TYCHO2")
-    t.remove_rows(g.np.where(t["ID_TYCHO2"].mask)[0])
-    print "Table loaded"
-    print "Now loading RAVE table"
-    rave = g.io.read_csv("tgas/RAVE/RAVE_TGAS_1000.csv")
-    rave.remove_rows(g.np.where(rave["ID_TYCHO2"].mask)[0])
-    print "Table loaded"
-
-    joinedtable = g.table.join(rave, t, keys="ID_TYCHO2")
-    del t
-    del rave
-    t = joinedtable["row_id", "source_id", "RAVEID", "ID_TYCHO2", "ID_Hipparcos", "HRV", "eHRV", "BminV", "g_mag_abs_2", "ra_rad", "dec_rad", "parallax", "pmra", "pmdec", "C"]
-    
-    t.remove_rows(g.np.where(t["HRV"] > 150.)[0])
-    t.remove_rows(g.np.where(t["HRV"] < -150.)[0])
-    
-    t.write("tgas/RAVE/crossmatch.txt", format="ascii.fixed_width")
-    g.np.save("tgas/RAVE/C.npy", t["C"]._data)
-    print "Made join table"
+from gfc import ArgumentParser
+parser = ArgumentParser()
+parser.add_argument("crossmatch_file", help = "File containing the TGAS/2MASS/RAVE cross-match table")
+parser.add_argument("xd_folder", help = "Folder containing results from XD")
+parser.add_argument("-v", "--verbose", action = "store_true")
+args = parser.parse_args()
 
 sqwrange = g.np.arange(0.5, 3.75, 0.25)
 wrange = sqwrange**2.
