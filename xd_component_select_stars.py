@@ -6,8 +6,9 @@ parser = ArgumentParser()
 parser.add_argument("data_file", help = "File that contains the stellar data")
 parser.add_argument("xd_results_folder", help = "Folder that contains the XD results")
 parser.add_argument("save_folder", help = "Folder in which to save results")
-parser.add_argument("-v", "--verbose", action = "store_true")
+parser.add_argument("-r", "--has_vr", help = "Does the table have VR? The VR column is assumed to be titled HRV", action = "store_true")
 parser.add_argument("-t", "--threshold", help = "-1 * Log-likelihood threshold for component membership", default = 9.0, type = float)
+parser.add_argument("-v", "--verbose", action = "store_true")
 args = parser.parse_args()
 
 t = gfc.io.read_csv(args.data_file)
@@ -22,11 +23,14 @@ covs_xd = np.load(args.xd_results_folder+"covariances.npy")
 if args.verbose:
     print "Finished loading XD parameters"
 
-gfc.tgas.add_rad(t)
-gfc.tgas.add_w(t)
-gfc.tgas.add_A(t)
-gfc.tgas.add_R(t)
-gfc.tgas.add_UVW(t)
+gfc.add_rad(t)
+if args.has_vr:
+    gfc.matrix.add_w(t, v_r_col = "HRV")
+else:
+    gfc.matrix.add_w(t)
+gfc.matrix.add_A(t)
+gfc.matrix.add_R(t)
+gfc.matrix.add_UVW(t)
 
 if args.verbose:
     print "Calculated U, V, W"
