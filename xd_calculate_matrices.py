@@ -9,6 +9,7 @@ parser = ArgumentParser()
 parser.add_argument("data_file", help = "File containing TGAS data")
 parser.add_argument("save_folder", help = "Folder in which results will be saved")
 parser.add_argument("-v", "--verbose", action = "store_true")
+parser.add_argument("-r", "--remove_columns", action = "store_true")
 args = parser.parse_args()
 
 if args.verbose:
@@ -21,7 +22,8 @@ if args.verbose:
     print t.keys()
 
 gfc.tgas.add_rad(t)
-gfc.remove_unused_columns(t)
+if args.remove_columns:
+    gfc.remove_unused_columns(t)
 time_after_reading = gfc.time()
 if args.verbose:
     print "Read TGAS data in {0:.1f} seconds".format(time_after_reading - time_before_reading)
