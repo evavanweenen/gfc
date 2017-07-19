@@ -1,6 +1,5 @@
 """
 Fit a model to TGAS data using XD.
-Note: several matrices must be pre-calculated, e.g. using the script `xd_calculate_matrices.py`
 """
 import gfc
 
