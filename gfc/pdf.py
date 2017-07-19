@@ -15,6 +15,27 @@ def entropy(x, f):
     H = - np.sum(f_ * np.log(f_ / w))
     return H
 
+def loglikelihood(mean, covariance, x):
+    s, lnSigma = np.linalg.slogdet(covariance) 
+    prod = (x - mean).dot(np.linalg.inv(covariance)).dot(x - mean)
+    kln2pi = len(mean) * np.log(2.*np.pi)
+    return -0.5 * (lnSigma + prod + kln2pi)
+
+def loglikelihood_many(mean, covariance, x):
+    s, lnSigma = np.linalg.slogdet(covariance)
+    xm = x - mean
+    Cinv = np.linalg.inv(covariance)
+    prod = Cinv[0,0] * xm[:,0]**2 + Cinv[1,1] * xm[:,1]**2 + Cinv[2,2] * xm[:,2]**2 + 2 * Cinv[0,1] * xm[:,0] * xm[:,1] + 2 * Cinv[0,2] * xm[:,0] * xm[:,2] + 2 * Cinv[1,2] * xm[:,1] * xm[:,2]
+    kln2pi = len(mean) * np.log(2.*np.pi)
+    return -0.5 * (lnSigma + prod + kln2pi)
+
+def loglikelihood_many_multiPDF(means, covariances, x):
+    assert len(means) == len(covariances)
+    Ls = np.empty((len(x), len(means)))
+    for i in range(len(means)):
+        Ls[:,i] = loglikelihood_many(means[i], covariances[i], x)
+    return Ls
+
 def multivariate(mean, covariance, amplitude = 1.):
     pdf = multivariate_normal(mean = mean, cov = covariance)
     pdf.amp = amplitude
