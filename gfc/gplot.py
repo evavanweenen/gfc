@@ -380,14 +380,15 @@ def S2V(VR, S2R, VM, S2M, VcoevR, VcoevM, saveto=None):
     show_or_save(saveto, f)
     plt.close(f)
 
-def moving_group(ra, dec, l, b, U, V, W, amplitude, mean, covariance, saveto = None, **kwargs):
+def moving_group(ra, dec, l, b, U, V, W, a = None, m = None, c = None, saveto = None, **kwargs):
     fig, axs = plt.subplots(2, 3, figsize = (15, 10), tight_layout = True)
     density_ax(axs[0,0], U, V, r = ((-130, 130), (-130, 130)), **kwargs)
-    draw_PDF_ellipse(axs[0,0], amplitude, mean, covariance, "xy", zorder = 1000)
     density_ax(axs[0,1], U, W, r = ((-130, 130), (-130, 130)), **kwargs)
-    draw_PDF_ellipse(axs[0,1], amplitude, mean, covariance, "xz", zorder = 1000)
     density_ax(axs[0,2], V, W, r = ((-130, 130), (-130, 130)), **kwargs)
-    draw_PDF_ellipse(axs[0,2], amplitude, mean, covariance, "yz", zorder = 1000)
+    if a is not None and m is not None and c is not None:
+        draw_PDF_ellipse(axs[0,0], a, m, c, "xy", zorder = 1000)
+        draw_PDF_ellipse(axs[0,1], a, m, c, "xz", zorder = 1000)
+        draw_PDF_ellipse(axs[0,2], a, m, c, "yz", zorder = 1000)
     density_ax(axs[1,0], ra, dec, r = ((0, 360), (-90, 90)),**kwargs)
     density_ax(axs[1,1], l, b, r = ((0, 360), (-90, 90)), **kwargs)
     show_or_save(saveto, fig)
