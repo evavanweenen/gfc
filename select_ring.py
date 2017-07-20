@@ -1,6 +1,7 @@
+import matplotlib
+matplotlib.use('Agg') 
 import gfc
 import numpy as np
-
 from gfc import ArgumentParser
 parser = ArgumentParser()
 parser.add_argument("data_file", help = "File that contains the stellar data")
@@ -34,7 +35,9 @@ crit = 1. - np.cos(args.threshold * np.pi / 180.)
 selections = [np.where(np.abs(d) < crit)[0] for d in dot_products]
 
 for i, (m, s) in enumerate(zip(mean_coords, selections)):
-    #gfc.gplot.plt.scatter(m[0], m[1], s = 20, c='k')
+    gfc.gplot.plt.scatter(m[0]*180/np.pi, m[1]*180/np.pi, s = 20, c='k')
     #gfc.gplot.plt.scatter(t["ra_rad"][s], t["dec_rad"][s], s = 1, color='r')
-    gfc.gplot.density(t["ra"][s], t["dec"][s], r = ((0, 360), (-90, 90)), bins = 100, saveto = "{f}/ring_{n}.png".format(f = args.save_folder, n = i))
+    gfc.gplot.density_ax(gfc.gplot.plt.gca(), t["ra"][s], t["dec"][s], r = ((0, 360), (-90, 90)), bins = 100)
+    gfc.gplot.plt.savefig("{f}/ring_{n}.png".format(f = args.save_folder, n = i))
+    gfc.gplot.plt.close()
     print "{n:02d}: {N:04d} stars".format(n = i + 1, N = len(s))
