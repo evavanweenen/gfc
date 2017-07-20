@@ -23,6 +23,7 @@ def unit_vector(phi, theta):
 def mean_to_coords(m):
     l, b = toastro(m[0], m[1], m[2], 0, 0, 0)[:2]
     ra, dec = gal2ICRS.transformSkyCoordinates(l, b)
+    ra = ra%(2*np.pi)
     return np.array([ra, dec])
 
 def mean_to_coords_many(ms):
@@ -33,7 +34,8 @@ def mean_to_coords_many(ms):
 def mean_coords_dot_stars(mean_coords, ra_stars, dec_stars):
     assert len(ra_stars) == len(dec_stars)
     unit_stars = unit_vector(ra_stars, dec_stars)
-    unit_means = unit_vector(*mean_coords)
+    unit_means = unit_vector(*mean_coords.T)
+    D = unit_means.dot(unit_stars.T)
     return D
 
 def A(alpha, delta):
