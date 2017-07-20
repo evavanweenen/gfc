@@ -5,6 +5,7 @@ from pygaia.astrometry.constants import auKmYearPerSec as A_v
 from pygaia.astrometry.vectorastrometry import phaseSpaceToAstrometry as toastro, normalTriad, astrometryToPhaseSpace as tophase, sphericalToCartesian as tocart
 from pygaia.astrometry import coordinates as coords
 ICRS_to_galactic = coords.CoordinateTransformation(coords.Transformations.ICRS2GAL)
+gal2ICRS = coords.CoordinateTransformation(coords.Transformations.GAL2ICRS)
 
 def A(alpha, delta):
     """
