@@ -7,6 +7,7 @@ parser.add_argument("rave_file", help = "File containing the RAVE table")
 parser.add_argument("save_to", help = "Location to save cross-matched table to")
 parser.add_argument("-v", "--verbose", action = "store_true")
 parser.add_argument("-r", "--remove_columns", action = "store_true")
+parser.add_argument("-a", "--add_velocities", action = "store_true")
 args = parser.parse_args()
 
 if args.verbose:
@@ -29,11 +30,19 @@ if args.verbose:
     print "Loaded RAVE table; removed {0}/{1} rows without a TYCHO2 ID".format(original_length - new_length, original_length)
 if args.verbose:
     print "Now performing cross-match"
-joinedtable = gfc.table.join(rave, t, keys="ID_TYCHO2")
+j = gfc.table.join(rave, t, keys="ID_TYCHO2")
+del rave, t
 if args.verbose:
-    print "Cross-match done: {0} rows included".format(len(joinedtable))
+    print "Cross-match done: {0} rows included".format(len(j))
 if args.remove_columns:
-    gfc.remove_unused_columns(joinedtable)
-gfc.io.write_csv(joinedtable, args.save_to)
+    gfc.remove_unused_columns(j)
+if args.add_velocities:
+    gfc.add_rad(j)
+    gfc.matrix.add_w(j, v_r_col = "HRV", components = False)
+    gfc.matrix.add_A(j)
+    gfc.matrix.add_R(j)
+    gfc.matrix.add_UVW(j, vector = False)
+    j.remove_columns(("R", "A", "R^-1", "w_vec", "ra_rad", "dec_rad", "ra_rad_error", "dec_rad_error"))
+gfc.io.write_csv(j, args.save_to)
 if args.verbose:
     print "Cross-matched table written"
