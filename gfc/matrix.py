@@ -20,6 +20,11 @@ def unit_vector(phi, theta):
     rhats[:,2] = res[2]
     return rhats
 
+def add_pmlb(t, ra, dec, pmra, pmdec):
+    pml, pmb = ICRS_to_galactic.transformProperMotions(ra, dec, pmra, pmdec)
+    t.add_column(table.Column(data = pml, name = "pml"))
+    t.add_column(table.Column(data = pmb, name = "pmb"))
+
 def mean_to_coords(m):
     l, b = toastro(m[0], m[1], m[2], 0, 0, 0)[:2]
     ra, dec = gal2ICRS.transformSkyCoordinates(l, b)
