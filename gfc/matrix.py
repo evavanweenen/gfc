@@ -17,6 +17,15 @@ def mean_to_coords_many(ms):
     vecs = np.array(vecs)
     return vecs
 
+def mean_coords_dot_stars(mean_coords, ra_stars, dec_stars):
+    assert len(ra_stars) == len(dec_stars)
+    #D = np.empty(len(ra_stars), len(mean_coords))
+    radecs = np.empty((2, len(ra_stars)))
+    radecs[0] = ra_stars
+    radecs[1] = dec_stars
+    D = mean_coords.dot(radecs).T
+    return D
+
 def A(alpha, delta):
     """
     A matrix for a single star with ICRS coords (alpha, delta)
