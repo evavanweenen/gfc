@@ -4,11 +4,11 @@ Some are very general, some are very hardcoded.
 """
 
 from matplotlib import pyplot as plt
-from matplotlib.pyplot.cm import viridis
 from matplotlib.patches import Ellipse
 from matplotlib.colors import LogNorm
 import matplotlib.gridspec as gridspec
 from matplotlib.gridspec import GridSpec
+viridis = plt.cm.viridis
 
 import numpy as np
 
