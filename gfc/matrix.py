@@ -7,6 +7,19 @@ from pygaia.astrometry import coordinates as coords
 ICRS_to_galactic = coords.CoordinateTransformation(coords.Transformations.ICRS2GAL)
 gal2ICRS = coords.CoordinateTransformation(coords.Transformations.GAL2ICRS)
 
+def unit_vector(phi, theta):
+    """
+    phi is longitude (RA, l, ...) IN RAD
+    theta is latitude (Dec, b, ...) IN RAD
+    this function can already handle arrays
+    """
+    rhats = np.empty((len(phi), 3))
+    res = tocart(1., phi, theta)
+    rhats[:,0] = res[0]
+    rhats[:,1] = res[1]
+    rhats[:,2] = res[2]
+    return rhats
+
 def mean_to_coords(m):
     l, b = toastro(m[0], m[1], m[2], 0, 0, 0)[:2]
     ra, dec = gal2ICRS.transformSkyCoordinates(l, b)
@@ -19,11 +32,8 @@ def mean_to_coords_many(ms):
 
 def mean_coords_dot_stars(mean_coords, ra_stars, dec_stars):
     assert len(ra_stars) == len(dec_stars)
-    #D = np.empty(len(ra_stars), len(mean_coords))
-    radecs = np.empty((2, len(ra_stars)))
-    radecs[0] = ra_stars
-    radecs[1] = dec_stars
-    D = mean_coords.dot(radecs).T
+    unit_stars = unit_vector(ra_stars, dec_stars)
+    unit_means = unit_vector(*mean_coords)
     return D
 
 def A(alpha, delta):
