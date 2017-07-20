@@ -7,6 +7,16 @@ from pygaia.astrometry import coordinates as coords
 ICRS_to_galactic = coords.CoordinateTransformation(coords.Transformations.ICRS2GAL)
 gal2ICRS = coords.CoordinateTransformation(coords.Transformations.GAL2ICRS)
 
+def mean_to_coords(m):
+    l, b = toastro(m[0], m[1], m[2], 0, 0, 0)[:2]
+    ra, dec = gal2ICRS.transformSkyCoordinates(l, b)
+    return np.array([ra, dec])
+
+def mean_to_coords_many(ms):
+    vecs = [mean_to_coords(m) for m in ms]
+    vecs = np.array(vecs)
+    return vecs
+
 def A(alpha, delta):
     """
     A matrix for a single star with ICRS coords (alpha, delta)
