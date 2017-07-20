@@ -36,11 +36,19 @@ selections = [np.where(np.abs(d) < crit)[0] for d in dot_products]
 
 for i, (m, s) in enumerate(zip(mean_coords, selections)):
     pml, pmb = gfc.matrix.ICRS_to_galactic.transformProperMotions(t["ra_rad"][s], t["dec_rad"][s], t["pmra"][s], t["pmdec"][s])
-    fig, axs = gfc.gplot.plt.subplots(2, tight_layout = True)
-    axs[0].scatter(m[0]*180/np.pi, m[1]*180/np.pi, s = 20, c='k')
-    #gfc.gplot.plt.scatter(t["ra_rad"][s], t["dec_rad"][s], s = 1, color='r')
-    gfc.gplot.density_ax(axs[0], t["ra"][s], t["dec"][s], r = ((0, 360), (-90, 90)), bins = (75, 40))
-    axs[1].hist(pmb, bins = 25, range = (-150, 150))
+    fig, axs = gfc.gplot.plt.subplots(2)#, tight_layout = True)
+    m = np.array(gfc.matrix.ICRS_to_galactic.transformSkyCoordinates(m[0], m[1]))
+    m = m * 180 / np.pi
+    m[0] = m[0]%360
+    axs[0].scatter(m[0], m[1], s = 20, c='k')
+    #gfc.gplot.density_ax(axs[0], t["ra"][s], t["dec"][s], r = ((0, 360), (-90, 90)), bins = (75, 40))
+    h = axs[0].hexbin(t["l"][s], t["b"][s], pmb, gridsize = (75, 30), cmap = gfc.gplot.plt.cm.jet, extent = (0, 360, -90, 90), vmin = -100, vmax = 100)
+    fig.subplots_adjust(right=0.8)
+    cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
+    fig.colorbar(h, cbar_ax)
+    axs[0].set_xlabel("$\ell$")
+    axs[0].set_ylabel("$b$")
+    axs[1].hist(pmb, bins = 25, range = (-120, 120))
     axs[1].set_xlim(-120, 120)
     axs[1].set_xlabel("$\mu(b)$")
     fig.savefig("{f}/ring_{n:02d}.png".format(f = args.save_folder, n = i))
