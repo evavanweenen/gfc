@@ -60,9 +60,7 @@ def set_axes(ax1, ax2, ax3):
     ax1.set_xticks((-100, -50, 0, 50, 100))
     ax1.set_yticks((-100, -50, 0, 50))
 
-amps_xd = np.load(args.xd_results_folder+"amplitudes.npy")
-means_xd = np.load(args.xd_results_folder+"means.npy")
-covs_xd = np.load(args.xd_results_folder+"covariances.npy")
+amps_xd, means_xd, covs_xd = gfc.io.load_PDFs(args.xd_results_folder)
 
 f = plt.figure(figsize=(8,8), tight_layout = True)
 

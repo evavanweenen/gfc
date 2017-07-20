@@ -4,7 +4,7 @@ Predict radial velocities for stars using a model from XD
 NOTE: NOT CURRENTLY USABLE
 """
 
-import gaia_fc as g
+import gfc
 from gfc import ArgumentParser
 parser = ArgumentParser()
 parser.add_argument("crossmatch_file", help = "File containing the TGAS/2MASS/RAVE cross-match table")
@@ -12,7 +12,7 @@ parser.add_argument("xd_folder", help = "Folder containing results from XD")
 parser.add_argument("-v", "--verbose", action = "store_true")
 args = parser.parse_args()
 
-sqwrange = g.np.arange(0.5, 3.75, 0.25)
+sqwrange = gfc.np.arange(0.5, 3.75, 0.25)
 wrange = sqwrange**2.
 
 x = len(t) # len(t)
@@ -27,10 +27,7 @@ for w in wrange:
     except:
         pass
     print K, w
-    amps_xd = g.np.load(f+"amplitudes.npy")
-    means_xd = g.np.load(f+"means.npy")
-    covs_xd = g.np.load(f+"covariances.npy")
-
+    amps_xd, means_xd, covs_xd = gfc.io.load_PDFs(f)
     PDFs = map(g.pdf.multivariate, means_xd, covs_xd, amps_xd)
 
     summary = g.table.Table(names=("ID", "HRV", "eHRV", "best_c", "best_m", "H_c", "H_m", "lower_c", "upper_c", "lower_m", "upper_m", "P"), dtype=[int, float, float, float, float, float, float, float, float, float, float, float])

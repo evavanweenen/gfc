@@ -1,14 +1,11 @@
-import numpy as np
+import gfc
 from gfc import ArgumentParser
-import time
 
 parser = ArgumentParser()
 parser.add_argument("xd_results_folder", help = "Folder that contains the XD results")
 args = parser.parse_args()
 
-amps_xd = np.load(args.xd_results_folder+"amplitudes.npy")
-means_xd = np.load(args.xd_results_folder+"means.npy")
-covs_xd = np.load(args.xd_results_folder+"covariances.npy")
+amps_xd, means_xd, covs_xd = gfc.io.load_PDFs(args.xd_results_folder)
 
 print amps_xd
 raw_input()

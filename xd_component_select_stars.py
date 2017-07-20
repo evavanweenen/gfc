@@ -17,10 +17,7 @@ t = gfc.io.read_csv(args.data_file)
 if args.verbose:
     print "Finished loading data"
 
-amps_xd = np.load(args.xd_results_folder+"amplitudes.npy")
-means_xd = np.load(args.xd_results_folder+"means.npy")
-covs_xd = np.load(args.xd_results_folder+"covariances.npy")
-
+amps_xd, means_xd, covs_xd = gfc.io.load_PDFs(args.xd_results_folder)
 if args.verbose:
     print "Finished loading XD parameters"
 
