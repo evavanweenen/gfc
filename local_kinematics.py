@@ -8,25 +8,8 @@ import gaia_fc as g
 
 print "imported gaia_fc"
 
-try:
-    assert t
-except:
-    print "Now loading 2MASS table"
-    t = g.io.load_table_with_separate_arrays(saveto_folder="tgas/2MASS/results/")
-    t.remove_columns(("R", "Q", "S", "A", "R^-1", "w1", "w2", "w3"))
-    t.rename_column("tycho2_id", "ID_TYCHO2")
-    t.rename_column("source_id", "ID")
-    t.remove_rows(g.np.where(t["ID_TYCHO2"].mask)[0])
-    print "Table loaded"
-    print "Now loading RAVE table"
-    rave = g.io.read_csv("tgas/RAVE/RAVE_TGAS_1000.csv")
-    rave.remove_rows(g.np.where(rave["ID_TYCHO2"].mask)[0])
-    print "Table loaded"
+# IMPORT RAVE/TGAS CROSSMATCH
 
-    joinedtable = g.table.join(rave, t, keys="ID_TYCHO2")
-    del t
-    del rave
-    t = joinedtable
 try:
     assert summary
 except:
