@@ -21,6 +21,10 @@ def read_data_as_table(loc = "tgas/tgas_all.vot"):
 
 
 def C_many(ra, radec, raplx, rapmra, rapmdec, dec, decplx, decpmra, decpmdec, plx, plxpmra, plxpmdec, pmra, pmrapmdec, pmdec):
+    """
+    ra, dec, plx, pmra, pmdec are sigma's
+    rest rhos (covariances)
+    """
     C = np.empty((len(ra), 5, 5))
     C[:,0,0] = ra**2.
     C[:,1,1] = dec**2.

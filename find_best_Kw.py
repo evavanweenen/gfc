@@ -2,6 +2,7 @@
 Find the optimal values of K, w for several XD models using two tests:
 - XD internal likelihood
 - predicted/observed radial velocities
+Also plot w versus K
 """
 
 import gaia_fc as g

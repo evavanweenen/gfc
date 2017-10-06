@@ -1,3 +1,8 @@
+"""
+(Probably) to test how well radial velocities are modelled.
+Unfinished.
+"""
+
 import gfc
 from gfc import ArgumentParser
 parser = ArgumentParser()

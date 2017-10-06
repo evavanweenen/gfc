@@ -32,6 +32,8 @@ if args.verbose:
 wrange = gfc.np.arange(args.wmin, args.wmax + args.wstep, args.wstep)**2.
 Krange = range(args.Kmin, args.Kmax + args.Kstep, args.Kstep)
 
+#make separate folder for each different model (so for each w and k combination)
+#for w-K plot, not beautiful
 for w in wrange:
     f_w = "{f}/w_{w}".format(f = args.save_folder, w = w)
     if not gfc.isdir(f_w):
@@ -64,14 +66,15 @@ time_after_matrices = gfc.time()
 if args.verbose:
     print "Added w, A, R, C, Q, S in {0:.1f} seconds".format(time_after_matrices - time_before_matrices)
 
+#XD cannot handle csv, so convert to numpy tables
 warr = gfc.XD_arr(t, "w1", "w2", "w3")
-wcov = gfc.XD_arr(t, "S") ; wcov[:, 0, 0] = 1e15
+wcov = gfc.XD_arr(t, "S") ; wcov[:, 0, 0] = 1e15 #hardcode: pretend first component (vrad) is 0, and make covariance very high so it is ignored
 proj = gfc.XD_arr(t, "R")
 
 for K in Krange:
     for w in wrange:
         f = "{f}/w_{w}/K_{K}".format(f = args.save_folder, w = w, K = K)
         print "K = {0} ; w = {1}".format(K, w)
-        amps_xd, means_xd, covs_xd, L = gfc.XD(warr, wcov, initial_amps[:K], initial_means[:K], initial_covs[:K], projection = proj, w = w)
+        amps_xd, means_xd, covs_xd, L = gfc.XD(warr, wcov, initial_amps[:K], initial_means[:K], initial_covs[:K], projection = proj, w = w) #extreme deconvolution, if data is simulated and it does not work out, something goes wrong at proj
         print >> open("{0}/L".format(f), 'w'), L
         gfc.io.save_PDFs(amps_xd, means_xd, covs_xd, f)

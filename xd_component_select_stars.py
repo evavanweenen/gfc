@@ -1,3 +1,8 @@
+"""
+Searches for all stars that are probably part of a component. 
+Evaluate moving group using metallicity data.
+"""
+
 import gfc
 import numpy as np
 

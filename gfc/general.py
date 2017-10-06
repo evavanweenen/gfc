@@ -22,7 +22,7 @@ from scipy.stats import norm, multivariate_normal as m_n, scoreatpercentile
 from pygaia.astrometry.vectorastrometry import phaseSpaceToAstrometry as toastro, normalTriad, astrometryToPhaseSpace as tophase, sphericalToCartesian as tocart
 from pygaia.astrometry import coordinates as coords
 
-from extreme_deconvolution import extreme_deconvolution as xd
+from extreme_deconvolution import extreme_deconvolution as xd #imported module from bovy
 
 from astropy import table
 

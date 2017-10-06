@@ -1,3 +1,8 @@
+"""
+Plot all data.
+Test - not used.
+"""
+
 import gfc
 from gfc import ArgumentParser
 from matplotlib import pyplot as plt

@@ -1,5 +1,6 @@
 """
 Predict radial velocities for stars using a model from XD
+Commented parts are not necessary
 
 NOTE: NOT CURRENTLY USABLE
 """

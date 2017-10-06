@@ -1,3 +1,8 @@
+"""
+To see whether component is real.
+Mean velocity of component. Take all stars perpendicular to mean velocity. For those stars easiest to evaluate whether they are part of the moving group. Because radial velocity data is not needed for these stars.
+Result: good test, could not read anything from it.
+"""
 import matplotlib
 matplotlib.use('Agg') 
 import gfc
