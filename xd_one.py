@@ -5,6 +5,7 @@ Done for one model (so one k and W), and get amps, means, covs and likelihoods f
 import gfc
 
 from gfc import ArgumentParser
+
 #when running programm, add options from terminal
 parser = ArgumentParser()
 parser.add_argument("data_file", help = "File that contains the data")
@@ -20,7 +21,9 @@ args = parser.parse_args()
 if args.verbose:
     print "Finished parsing arguments"
 
-#load files with initial estimates
+"""
+Load files with initial estimates
+"""
 initial_amps = gfc.io.load(args.init_amps)
 initial_means = gfc.io.load(args.init_means)
 initial_covs = gfc.io.load(args.init_covs)
@@ -30,14 +33,19 @@ w = args.w
 if args.verbose:
     print "Loaded initial estimates for Gaussian parameters"
 
-#read data (in csv) (data is for example gaia data)
-time_before_loading = gfc.time() #timen hoe lang dingen duren
+"""
+Read data (in csv) - data can be for example gaia data
+"""
+time_before_loading = gfc.time() #times how long the programme takes
 t = gfc.io.read_csv(args.data_file)
 gfc.remove_unused_columns(t)
 time_after_loading = gfc.time()
 
 if args.verbose:
     print "Finished loading data in {0:.1f} seconds".format(time_after_loading - time_before_loading)
+
+
+
 
 time_before_matrices = gfc.time()
 gfc.add_rad(t)
