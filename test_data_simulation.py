@@ -1,17 +1,19 @@
-import gfc
-from gfc import ArgumentParser
-import numpy as np
+from gfc import *
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 from astropy.table import Table
 from pygaia.astrometry.vectorastrometry import phaseSpaceToAstrometry
 
+from matplotlib import rc
+rc('font',**{'family':'serif', 'serif':['Times']})
+rc('text', usetex=True)
+
 parser = ArgumentParser()
 parser.add_argument("save_folder", help = "Folder in which results will be saved")
-parser.add_argument("--R", help = "Maximum radius of position of simulated stars", default = 15., type=float)
 parser.add_argument("--K", help = "Amount of components of normal distribution", default = 1, type= int)
 parser.add_argument("--errx", help = "Error in x", default=[.01,.01,.01], type=list)
 parser.add_argument("--errv", help = "Error in v", default=[2,4,6], type=list)
-parser.add_argument("--L", help = "How many stars to simulate", default=1e2, type = int)
+parser.add_argument("--L", help = "How many stars to simulate", default=1e4, type = int)
 parser.add_argument("-v", "--verbose", action = "store_true")
 args = parser.parse_args()
 args.L = int(args.L)
@@ -19,53 +21,156 @@ args.L = int(args.L)
 if args.verbose:
     print "Finished parsing arguments"
 
-def simulate_v(cov_v):
+Rmin = 1. #pc
+Rmax = 500. #pc
+
+print "K=", args.K ; print "L=", args.L
+
+def spherical_to_carthesian(r, theta, phi):
+    """
+    Transform spherical to Carthesian coordinates
+    """
+    x = np.empty([args.L, 3])
+    x[:,0] = r * np.sin(theta) * np.cos(phi)
+    x[:,1] = r * np.sin(theta) * np.sin(phi)
+    x[:,2] = r * np.cos(theta)
+    return x
+
+def simulate_x():
+    """
+    Generate homogeneous distribution in spherical coordinates for x
+    """
+    np.random.seed(1)
+    phi = np.random.uniform(0, 2*np.pi, args.L)
+    theta = np.arccos(np.random.uniform(-1, 1, args.L))
+    r = np.random.uniform(Rmin**3, Rmax**3, args.L)**(1./3.)
+    x = spherical_to_carthesian(r, theta, phi)
+    return x
+
+def simulate_amps():
+    """
+    Generate pseudo-random amplitudes (the number of stars in each component K)
+    """
+    np.random.seed(0)
+    rest = 1.
+    amps = []
+    for i in range(args.K-1):
+        amp_i = np.random.uniform(0,rest)
+        rest = rest - amp_i
+        amps.append(amp_i)
+    amps.append(rest)
+    print "amps", amps
+    np.save(args.save_folder + '/simulated_K{K}/initial_amps.npy'.format(K=args.K), amps)
+    return amps
+
+def simulate_constant_means():
+    """
+    Generate pseudo-random means that do not vary per component
+    """
+    np.random.seed(2)
+    mean_i = np.random.uniform(0.,100.,3)
+    means = np.tile(mean_i, (args.K,1))
+    print "means", means
+    np.save(args.save_folder + '/simulated_K{K}/initial_means.npy'.format(K=args.K), means)
+    return means
+    
+
+def simulate_varying_means():
+    """
+    Generate pseudo-random means, different for each component
+    """
+    np.random.seed(2)
+    means = np.empty([args.K, 3])
+    means[:,0] = np.random.uniform(0.,100., args.K)
+    print means[:,0]
+    means[:,1] = np.random.uniform(0.,100., args.K)
+    means[:,2] = np.random.uniform(0.,100., args.K)
+    print "means", means
+    np.save(args.save_folder + '/simulated_K{K}/initial_means.npy'.format(K=args.K), means)
+    return means
+
+def simulate_constant_sigma2():
+    """
+    Generate pseudo-random covariances that do not vary per component
+    """
+    np.random.seed(3)
+    sigma2_i = np.random.uniform(0.,40.,3)
+    sigma2 = np.tile(sigma2_i, (args.K,1))
+    print "sigma2", sigma2
+    return sigma2
+
+def simulate_varying_sigma2():
+    """
+    Generate pseudo-random covariances, different for each component
+    """
+    np.random.seed(3)
+    sigma2 = np.empty([args.K, 3])
+    sigma2[:,0] = np.random.uniform(0.,40., args.K)
+    sigma2[:,1] = np.random.uniform(0.,40., args.K)
+    sigma2[:,2] = np.random.uniform(0.,40., args.K)
+    print "sigma2", sigma2
+    return sigma2
+    
+def sigma_to_cov(sigma2):
+    covs = np.zeros((args.K,3,3))
+    covs[:,0,0] = sigma2[:,0]
+    covs[:,1,1] = sigma2[:,1]
+    covs[:,2,2] = sigma2[:,2]
+    print "covs", covs
+    np.save(args.save_folder + '/simulated_K{K}/initial_covs.npy'.format(K=args.K), covs)
+    return covs
+      
+
+def simulate_v(vary_means = True, vary_sigma2 = False):
     """
     Generate normal distribution in Carthesian coordinates for velocity consisting of K components
-    Here, mean is dependent on K (to make varying easy)
-    Covariances stay the same.
     """
-    mean_tot = np.array([]).reshape(0,3)
-    cov_tot = np.array([]).reshape(0,3,3)
-    v_tot = np.array([]).reshape(0,3)
-    for i in range(args.K):
-        mean_v = np.array([10*i,10*i,10*i])
-        length_i = args.L/args.K
-        if i == (args.K - 1):
-            length_i = args.L - i * length_i
-        print "length", length_i
-        v_i = np.random.multivariate_normal(mean_v, cov_v, length_i)
-        v_tot = np.append(v_tot,v_i, axis=0)
-        #mean_tot = np.append(mean_tot, [mean_v], axis=0)
-        #cov_tot = np.append(cov_tot, [cov_v], axis=0)
-        i+= 1
-        print "K:", i
-        
-    return v_tot#, mean_tot, cov_tot
+    amps = simulate_amps()
+    if vary_means:
+        means = simulate_varying_means() #array of K by 3 means
+    else:
+        means = simulate_constant_means()
+    if vary_sigma2:
+        covs = sigma_to_cov(simulate_varying_sigma2()) #array of K by 3 by 3 covs
+    else:
+        covs = sigma_to_cov(simulate_constant_sigma2())
+    v = np.array([]).reshape(0,3)
+    rest = args.L
+    for k in range(args.K):
+        l = int(amps[k] * args.L)
+        if k == (args.K - 1): #if something goes wrong with rounding off l
+            l = rest
+        rest -= l
+        v_k = np.random.multivariate_normal(means[k,:], covs[k,:,:], l)
+        v = np.append(v,v_k, axis=0)
+        print "K:", k+1  
+    return v
+
 
 """
-Simulate data in Carthesian coordinates
+Simulate homogeneous distribution for x in spherical coordinates and transform to Carthesian coordinates
+Simulate normal distribution for v consisting of K components in Carthesian coordinates
 """
-#Homogeneous distribution for x in radians
-phi = np.random.uniform(0, 2*np.pi, args.L)
-costheta = np.random.uniform(-1, 1, args.L)
-theta = np.arccos(costheta)
-r = args.R * np.random.uniform(0, 1, args.L)**(1./3.)
+x = simulate_x()
+v = simulate_v()
 
-x=np.empty([args.L, 3])
-x[:,0] = r * np.sin(theta) * np.cos(phi)
-x[:,1] = r * np.sin(theta) * np.sin(phi)
-x[:,2] = r * np.cos(theta)
+#print r[r<1.]
+#print x[np.sqrt(x[:,0]**2+x[:,1]**2+x[:,2]**2)<1.]
+print v
 
-#3D Normal distribution for v
-cov_v = np.array([[(args.errv[0])**2,0,0], [0,(args.errv[1])**2,0], [0,0,(args.errv[2])**2]])  # diagonal covariance
-v = simulate_v(cov_v) #x,y,z
-plt.scatter(v[:,0], v[:,1])
+"""
+Plot simulated data
+"""
+fig = plt.figure(0)
+fig.suptitle("Simulated data with K = {K} and L = {L}".format(K = args.K, L = args.L))
+ax1 = fig.add_subplot(1,2,1, projection='3d') ; ax2 = fig.add_subplot(1,2,2, projection='3d')
+ax1.scatter(x[:,0], x[:,1], x[:,2], s=.3, c='black', linewidth = 0)
+ax2.scatter(v[:,0], v[:,1], v[:,2], s=.3, c='black', linewidth = 0)
+ax1.set_xlabel("x") ; ax2.set_xlabel("U")
+ax1.set_ylabel("y") ; ax2.set_ylabel("V")
+ax1.set_zlabel("z") ; ax2.set_zlabel("W")
 plt.show()
-
-#np.save(args.save_folder + 'initial_means.npy', initial_mean)
-#np.save(args.save_folder + 'initial_covs.npy', initial_cov)
-
+fig.savefig(args.save_folder + '/simulated_data_K{K}_L{L}.png'.format(K = args.K, L = args.L))
 
 """
 Transform simulated data in Carthesian (phasespace) coordinates to observational (astrometry) coordinates
@@ -73,31 +178,15 @@ Transform simulated data in Carthesian (phasespace) coordinates to observational
 #positions
 phi, theta, parallax, muphistar, mutheta, vrad = phaseSpaceToAstrometry(x[:,0],x[:,1],x[:,2],v[:,0],v[:,1],v[:,2])
 positions = np.column_stack((phi, theta, parallax, muphistar, mutheta))
+print positions
 
 #errors
-phi_err, theta_err, parallax_err, muphistar_err, mutheta_err, vrad_err = phaseSpaceToAstrometry(args.errx[0], args.errx[1], args.errx[2], args.errv[0], args.errv[1], args.errv[2])
-#very ugly manner
-phi_err = [phi_err] * args.L
-theta_err = [theta_err] * args.L
-parallax_err = [parallax_err] * args.L
-muphistar_err = [muphistar_err] * args.L
-mutheta_err = [mutheta_err] * args.L
-vrad_err = [vrad_err] * args.L
-errors = np.column_stack((phi_err, theta_err, parallax_err, muphistar_err, mutheta_err))
+e = .1 #simple error
+errors = np.tile(np.tile([e],5), (args.L,1))
 
 #covariances
-phitheta_cov = [0] * args.L
-phiparallax_cov = [0] * args.L
-phimustar_cov = [0] * args.L
-phimutheta_cov = [0] * args.L
-thetaparallax_cov = [0] * args.L
-thetamustar_cov = [0] * args.L
-thetamutheta_cov = [0] * args.L
-parallaxmustar_cov = [0] * args.L
-parallaxmutheta_cov = [0] * args.L
-mustarmutheta_cov = [0] * args.L
-covariances = np.column_stack((phitheta_cov, phiparallax_cov, phimustar_cov, phimutheta_cov, thetaparallax_cov, thetamustar_cov, thetamutheta_cov, parallaxmustar_cov, parallaxmutheta_cov, mustarmutheta_cov))
-
+c = 0. #simple covariances
+covariances = np.tile(np.tile([c],10), (args.L, 1))
 
 """
 Write data to table and file
@@ -109,4 +198,4 @@ print len(labels)
 
 t=Table(arr, names=labels)
 
-gfc.io.write_table_without_arrays(t, args.save_folder+'/simulated_data_K{K}.npy'.format(K = args.K))
+io.write_table_without_arrays(t, args.save_folder+'/simulated_K{K}/simulated_data_K{K}_L{L}.npy'.format(K = args.K, L = args.L))
