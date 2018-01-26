@@ -107,12 +107,11 @@ def XD(y, e, amplitudes, means, covariances, *args, **kwargs):
 
     return a, m, c, L
 
-def add_rad(t, ra_col = "ra", dec_col = "dec", ra_rad_col = "ra_rad", dec_rad_col = "dec_rad", error_suffix = "_error"):
-    ra_rad = np.radians(t[ra_col]) ; ra_rad.name = ra_rad_col
-    de_rad = np.radians(t[dec_col]); de_rad.name = dec_rad_col
-    ra_rad_err = np.radians(t[ra_col+error_suffix]/3.6e6) ; ra_rad_err.name = ra_rad_col+error_suffix
-    de_rad_err = np.radians(t[dec_col+error_suffix]/3.6e6) ; de_rad_err.name = dec_rad_col+error_suffix
-    t.add_columns((ra_rad, de_rad, ra_rad_err, de_rad_err))
+def add_rad(t, col):
+    print "Transforming to radians for.. ", col
+    col_rad = np.radians(t[col]/3.6e6) ; col_rad.name = col + "_rad"
+    col_rad_err = np.radians(t[col+"_error"]/3.6e6) ; col_rad_err.name = col + "_rad_error"
+    t.add_columns((col_rad, col_rad_err))
 
 def r(x, y, z):
     return np.sqrt(x**2 + y**2 + z**2)
@@ -279,4 +278,3 @@ def remove_unused_columns(t):
                 t.remove_column(c)
             except:
                 pass
-   
