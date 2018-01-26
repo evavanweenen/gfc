@@ -20,7 +20,10 @@ def w(t, plx_col = "parallax", mura_col = "pmra", mudec_col = "pmdec", vrad_col 
         w-vector (vrad, valpha, vdelta) (km/s, km/s, km/s) 
     """
     w = np.empty((len(t[plx_col]), 3))
-    w[:,0] = t[vrad_col]
+    if vrad_col == None:
+        w[:,0] = 0
+    else:
+        w[:,0] = t[vrad_col]
     w[:,1] = A_v / t[plx_col] * t[mura_col] #notice that mura includes the cos
     w[:,2] = A_v / t[plx_col] * t[mudec_col]
     t.add_column(table.Column(w, w_col))
