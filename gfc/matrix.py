@@ -4,59 +4,38 @@ from astropy import table
 from pygaia.astrometry.constants import auKmYearPerSec as A_v
 from pygaia.astrometry.vectorastrometry import phaseSpaceToAstrometry as toastro, normalTriad, astrometryToPhaseSpace as tophase, sphericalToCartesian as tocart
 from pygaia.astrometry import coordinates as coords
-ICRS_to_galactic = coords.CoordinateTransformation(coords.Transformations.ICRS2GAL)
+from .tgas import *
+
+ICRS2gal = coords.CoordinateTransformation(coords.Transformations.ICRS2GAL)
 gal2ICRS = coords.CoordinateTransformation(coords.Transformations.GAL2ICRS)
 
-def unit_vector(phi, theta):
+def w(t, plx_col = "parallax", mura_col = "pmra", mudec_col = "pmdec", vrad_col = None, w_col = "w"):
     """
-    phi is longitude (RA, l, ...) IN RAD
-    theta is latitude (Dec, b, ...) IN RAD
-    this function can already handle arrays
+    Calculate w_vector (vrad, v_alpha, v_delta) in ICRS coordinates which is the input for extreme deconvolution.
+    Input
+        parallax (mas)
+        pmra (mas/yr) - aka muphistar, includes cos
+        pmdec (mas/yr) - aka mutheta
+    Returns
+        w-vector (vrad, valpha, vdelta) (km/s, km/s, km/s) 
     """
-    rhats = np.empty((len(phi), 3))
-    res = tocart(1., phi, theta)
-    rhats[:,0] = res[0]
-    rhats[:,1] = res[1]
-    rhats[:,2] = res[2]
-    return rhats
-
-def add_pmlb(t, ra, dec, pmra, pmdec):
-    pml, pmb = ICRS_to_galactic.transformProperMotions(ra, dec, pmra, pmdec)
-    t.add_column(table.Column(data = pml, name = "pml"))
-    t.add_column(table.Column(data = pmb, name = "pmb"))
-
-def mean_to_coords(m):
-    l, b = toastro(m[0], m[1], m[2], 0, 0, 0)[:2]
-    ra, dec = gal2ICRS.transformSkyCoordinates(l, b)
-    ra = ra%(2*np.pi)
-    return np.array([ra, dec])
-
-def mean_to_coords_many(ms):
-    vecs = [mean_to_coords(m) for m in ms]
-    vecs = np.array(vecs)
-    return vecs
-
-def mean_coords_dot_stars(mean_coords, ra_stars, dec_stars):
-    assert len(ra_stars) == len(dec_stars)
-    unit_stars = unit_vector(ra_stars, dec_stars)
-    unit_means = unit_vector(*mean_coords.T)
-    D = unit_means.dot(unit_stars.T)
-    return D
-
-def A(alpha, delta):
+    w = np.empty((len(t[plx_col]), 3))
+    w[:,0] = t[vrad_col]
+    w[:,1] = A_v / t[plx_col] * t[mura_col] #notice that mura includes the cos
+    w[:,2] = A_v / t[plx_col] * t[mudec_col]
+    t.add_column(table.Column(w, w_col))
+    
+def A(t, ra_rad_col = "ra_rad", dec_rad_col = "dec_rad", A_col = "A"):
     """
-    A matrix for a single star with ICRS coords (alpha, delta)
-    """
-    ca = cos(alpha) ; sa = sin(alpha) ; cd = cos(delta) ; sd = sin(delta)
-    A = array([[ca * cd, -sa, -ca * sd], [sa * cd, ca, -sa * sd], [sd, 0, cd]])
-    return A
-
-def A_many(alphas, deltas):
-    """
-    A matrix for a many stars with ICRS coords (alpha, delta)
-    """
-    ca = cos(alphas) ; sa = sin(alphas) ; cd = cos(deltas) ; sd = sin(deltas)
-    A = np.empty((len(alphas), 3, 3))
+    Calculate matrix A of normal triad necessary in order to calculate rotation matrix R.
+    Input
+        ra (rad)
+        dec (rad)
+    Returns
+        A - normal triad matrix
+    """    
+    ca = cos(t[ra_rad_col]) ; sa = sin(t[ra_rad_col]) ; cd = cos(t[dec_rad_col]) ; sd = sin(t[dec_rad_col])
+    A = np.empty((len(t[ra_rad_col]), 3, 3))
     A[:,0,0] = ca * cd
     A[:,0,1] = -sa
     A[:,0,2] = -ca * sd
@@ -66,112 +45,100 @@ def A_many(alphas, deltas):
     A[:,2,0] = sd
     A[:,2,1] = 0.
     A[:,2,2] = cd
-    return A
-
-def R_inv(A):
+    #A[:,:,0] = [ca * cd, sa * cd, sd]
+    #A[:,:,1] = [-sa, ca, 0.]
+    #A[:,:,2] = [-ca * sd, -sa * sd, cd]
+    #A[:,:,1], A[:,:,2], A[:,:,0] = normalTriad(t[ra_rad_col], t[dec_rad_col])
+    t.add_column(table.Column(A, A_col))
+    
+def R(t, A_col = "A", R_col = "R", R_inv_col = "R^-1"):
     """
-    R^-1 matrix for a star with A matrix A
+    Calculate the projection matrix R.
+    Input
+        A - normal triad matrix
+    Returns
+        R - rotation matrix
+        R^-1 - inverse rotation matrix
     """
-    return ICRS_to_galactic.rotationMatrix.dot(A)
+    R_inv = ICRS2gal.rotationMatrix.dot(t[A_col]).swapaxes(0,1) 
+    t.add_column(table.Column(R_inv, R_inv_col))
+    R = np.linalg.inv(R_inv)
+    t.add_column(table.Column(R, name = R_col))
 
-def R_inv_many(As):
+def C(t, ra_col = "ra", dec_col = "dec", plx_col = "parallax", mura_col = "pmra", mudec_col = "pmdec", C_col = "C"):
     """
-    R^-1 matrices for many stars with A matrix A
+    Compose the convariance matrix C of astrometric observables from correlations and errors from data.
+    Input
+        Errors of ra (rad), dec (rad), parallax (mas), pmra (mas/yr), pmdec (mas/yr)
+        Correlations between all above named observables (unitless)
+    Returns
+        C - covariance matrix of astrometric observables
     """
-    return ICRS_to_galactic.rotationMatrix.dot(As).swapaxes(0, 1)
+    C = np.empty((len(t[ra_col]), 5, 5))
+    var = [ra_col+"_rad", dec_col+"_rad", plx_col, mura_col, mudec_col]
+    covar = [ra_col, dec_col, plx_col, mura_col, mudec_col]
+    for i in range(5):
+        for j in range(5):
+            if i == j:
+                C[:,i,j] = t[var[i]+"_error"] * t[var[j]+"_error"]
+            elif i < j:
+                C[:,i,j] = t[var[i]+"_error"] * t[var[j]+"_error"] * t[covar[i]+"_"+covar[j]+"_corr"]
+            else:
+                C[:,i,j] = C[:,j,i]
+    t.add_column(table.Column(C, C_col))
 
-def w(parallax, mu_alpha_star, mu_delta, v_r = 0):
-    el1 = v_r
-    el2 = (A_v / parallax) * mu_alpha_star
-    el3 = (A_v / parallax) * mu_delta
-    w = array([[el1], [el2], [el3]])
-    return w
+def Q(t, plx_col = "parallax", mura_col = "pmra", mudec_col = "pmdec", Q_col = "Q"):
+    """
+    Calculate Q, matrix necessary to compute covariance matrix S in same ICRS coordinates as w-vector.
+    Input
+        parallax (mas)
+        pmra (mas/yr)
+        pmdec (mas/yr)
+    Returns
+        Q - matrix
+    """
+    Q = np.zeros((len(t[plx_col]), 3, 5))
+    Q[:,1,2] = -A_v/(t[plx_col]**2.) * t[mura_col]
+    Q[:,1,3] = A_v/t[plx_col]
+    Q[:,2,2] = -A_v/(t[plx_col]**2.) * t[mudec_col]
+    Q[:,2,4] = A_v/t[plx_col]
+    t.add_column(table.Column(Q, Q_col))
 
-def w_many(parallax, mu_alpha_star, mu_delta, v_r = 0):
-    w = np.empty((len(parallax), 3))
-    w[:,0] = v_r
-    w[:,1] = A_v / parallax * mu_alpha_star
-    w[:,2] = A_v / parallax * mu_delta
-    return w
+def S(t, C_col = "C", Q_col = "Q", S_col = "S"):
+    """
+    Calculate covariance matrix S in same ICRS coordinates as w-vector.
+    S = Q*C*Q.T
+    Input
+        Q - matrix in order to calculate new covariance matrix
+        C - covariance matrix of astrometric observables
+    Returns
+        S - covariance matrix of w-vector in ICRS coordinates
+    """    
+    S = np.empty((len(t[C_col]), 3, 3))
+    for i in range(len(t[C_col])):
+        S[i,:,:] = t[Q_col][i,:,:].dot(t[C_col][i,:,:]).dot(t[Q_col][i,:,:].T)
+    t.add_column(table.Column(S, S_col))
 
-def Q_star(parallax, mu_alpha_star, mu_delta):
-    Q = array([[0., 0., 0., 0, 0.],
-    [0., 0., -k/(parallax**2.) * mu_alpha_star, k/parallax, 0.],
-    [0., 0., -k/(parallax**2.) * mu_delta, 0., k/parallax]])
-    return Q
+def UVW(t, w_col = "w", R_inv_col = "R^-1", UVW_col = "UVW"):
+    """
+    Calculate v-vector, from inverted rotation matrix R^-1 and w-vector
+    v = R^-1 * w
+    Input
+        w-vector - (vrad, valpha, vdelta) in ICRS coordinates
+        R^-1 - inverse rotation matrix
+    Returns
+        v - original uvw velocity vector in galactic coordinates
+    """
+    UVW = np.empty((len(t[w_col]), 3))
+    for i in range(len(t[w_col])):
+        UVW[i,:] = t[R_inv_col][i,:,:].dot(t[w_col][i,:])
+    t.add_column(table.Column(UVW, UVW_col))
 
-def Q_star_many(parallax, mu_alpha_star, mu_delta):
-    Q = np.empty((len(parallax), 3, 5))
-    Q[:,0,:] = 0.
-    Q[:,:,:2] = 0.
-    Q[:,1,2] = -A_v/(parallax**2.) * mu_alpha_star
-    Q[:,1,3] = A_v/parallax
-    Q[:,1,4] = 0.
-    Q[:,2,2] = -A_v/(parallax**2.) * mu_delta     
-    Q[:,2,3] = 0.
-    Q[:,2,4] = A_v/parallax
-    return Q
-
-def S(C, Q):
-    S = Q.dot(C).dot(Q.T)
-    return S
-
-def S_many(C, Q):
-    S = np.empty((len(C), 3, 3))
-    S[:,0,:] = 0.
-    S[:,:,0] = 0.
-    S[:,1,1] = Q[:,1,2]**2. * C[:,2,2] + 2 * Q[:,1,2] * Q[:,1,3] * C[:,2,3] + Q[:,1,3]**2. * C[:,3,3]
-    S[:,2,2] = Q[:,2,2]**2. * C[:,2,2] + 2 * Q[:,2,4] * Q[:,2,2] * C[:,2,4] + Q[:,2,4]**2. * C[:,4,4]
-    S[:,1,2] = Q[:,2,2] * Q[:,1,2] * C[:,2,2] + Q[:,2,2] * Q[:,1,3] * C[:,2,3] + Q[:,2,4] * Q[:,1,2] * C[:,2,4] + Q[:,2,4] * Q[:,1,3] * C[:,3,4]
-    S[:,2,1] = S[:,1,2]
-    return S
-
-def UVW_wR(w, Rinv):
-    return Rinv.dot(w)
-
-def UVW_wR_many(w, Rinv):
-    UVW = np.empty((len(w), 3))
-    UVW[:,0] = w[:,0].T * Rinv[:,0,0] + w[:,1].T * Rinv[:,0,1] + w[:,2].T * Rinv[:,0,2]
-    UVW[:,1] = w[:,0].T * Rinv[:,1,0] + w[:,1].T * Rinv[:,1,1] + w[:,2].T * Rinv[:,1,2]
-    UVW[:,2] = w[:,0].T * Rinv[:,2,0] + w[:,1].T * Rinv[:,2,1] + w[:,2].T * Rinv[:,2,2]
-    return UVW
-
-def add_w(t, plx_col = "parallax", mura_col = "pmra", mudec_col = "pmdec", v_r_col = None, components = True, vector = True):
-    if v_r_col is None:
-        ws = w_many(t[plx_col], t[mura_col], t[mudec_col])
-    else:
-        ws = w_many(t[plx_col], t[mura_col], t[mudec_col], v_r = t[v_r_col])
-    if components:
-        t.add_column(table.Column(data = ws[:, 0], name = "w1", unit = "km / s"))
-        t.add_column(table.Column(data = ws[:, 1], name = "w2", unit = "1 / yr"))
-        t.add_column(table.Column(data = ws[:, 2], name = "w3", unit = "1 / yr"))
-    if vector:
-        t.add_column(table.Column(data = ws, name = "w_vec"))
-
-def add_A(t, ra_rad_col = "ra_rad", dec_rad_col = "dec_rad", A_col = "A"):
-    As = A_many(t[ra_rad_col], t[dec_rad_col]) 
-    t.add_column(table.Column(data = As, name = A_col))
-
-def add_R(t, A_col = "A", R_col = "R", R_inv_col = "R^-1"):
-    R_invs = R_inv_many(t[A_col]) 
-    t.add_column(table.Column(data = R_invs, name = R_inv_col))
-    Rs = np.linalg.inv(R_invs)
-    t.add_column(table.Column(data = Rs, name = R_col))
-
-def add_UVW(t, w_vec_col = "w_vec", R_inv_col = "R^-1", components = True, vector = True):
-    UVWs = UVW_wR_many(t[w_vec_col], t[R_inv_col])
-    if components:
-        t.add_column(table.Column(data = UVWs[:, 0], name = "U", unit = "km / s"))
-        t.add_column(table.Column(data = UVWs[:, 1], name = "V", unit = "km / s"))
-        t.add_column(table.Column(data = UVWs[:, 2], name = "W", unit = "km / s"))
-    if vector:
-        t.add_column(table.Column(data = UVWs, name = "UVW_vec", unit = "km / s"))
-
-def add_Q(t, plx_col = "parallax", mura_col = "pmra", mudec_col = "pmdec", Q_col = "Q"):
-    Qs = Q_star_many(t[plx_col], t[mura_col], t[mudec_col])
-    t.add_column(table.Column(data = Qs, name = Q_col))
-
-def add_S(t, C_col = "C", Q_col = "Q", S_col = "S", verbose = True):
-    Ss = S_many(t[C_col], t[Q_col])
-    t.add_column(table.Column(data = Ss, name = S_col))
-
+def transformation(t, vrad_col = None):
+    w(t, vrad_col = vrad_col)
+    A(t)
+    R(t)
+    C(t)
+    Q(t)
+    S(t)
+    UVW(t)
