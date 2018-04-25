@@ -18,10 +18,10 @@ gfc.gplot
 gfc.general:
     General functions and constants; these are all imported directly into gfc
 """
-from . import tgas
-from . import pdf
+#from . import tgas
+#from . import pdf
 from . import matrix
 from . import io
-from . import mapping
+#from . import mapping
 from . import gplot
 from .general import *

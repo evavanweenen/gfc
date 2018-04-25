@@ -81,11 +81,11 @@ def write_table_with_separate_arrays(t, saveto_folder, format="ascii.fast_csv", 
     for arr_key in arrays:
         save("{0}/np/{1}.npy".format(saveto_folder, arr_key), t[arr_key]._data)
         if verbose:
-            print arr_key,
+            print(arr_key),
             flush()
     write_csv(t_no_arr, "{0}/table.csv".format(saveto_folder), overwrite = overwrite, *args, **kwargs)
     if verbose:
-        print ""
+        print("")
 
 def load_table_with_separate_arrays(saveto_folder, format="csv", verbose = True, *args, **kwargs):
     t = read_ascii("{0}/table.csv".format(saveto_folder), format=format, *args, **kwargs)
@@ -96,10 +96,10 @@ def load_table_with_separate_arrays(saveto_folder, format="csv", verbose = True,
         as_column = table.Column(data = arr, name = name)
         t.add_column(as_column)
         if verbose:
-            print name,
+            print(name),
             flush()
     if verbose:
-        print ""
+        print("")
     return t
 
 def save_PDFs(amplitudes, means, covariances, saveto_folder, *args, **kwargs):

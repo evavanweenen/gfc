@@ -7,9 +7,6 @@ from __future__ import division
 
 from matplotlib import rcParams
 
-from .pdf import univariate
-from .mapping import map_np, pmap_np, smap_np
-
 from os import mkdir
 from os.path import isdir
 from shutil import rmtree
@@ -17,10 +14,14 @@ from shutil import rmtree
 import numpy as np
 from numpy import radians, sin, cos, array
 
+import scipy.stats as sp
+
 from scipy.stats import norm, multivariate_normal as m_n, scoreatpercentile
 
 from pygaia.astrometry.vectorastrometry import phaseSpaceToAstrometry as toastro, normalTriad, astrometryToPhaseSpace as tophase, sphericalToCartesian as tocart
 from pygaia.astrometry import coordinates as coords
+
+from pygaia.astrometry.constants import auKmYearPerSec as A_v
 
 from extreme_deconvolution import extreme_deconvolution as xd #imported module from bovy
 
@@ -30,9 +31,11 @@ from time import time
 
 from argparse import ArgumentParser
 
-radiantomas = 180. * 3600. * 1000. / np.pi
+from astropy import units as u
+from astropy.coordinates import Angle
 
-ICRS_to_galactic = coords.CoordinateTransformation(coords.Transformations.ICRS2GAL)
+ICRS2gal = coords.CoordinateTransformation(coords.Transformations.ICRS2GAL)
+gal2ICRS = coords.CoordinateTransformation(coords.Transformations.GAL2ICRS)
 
 def timestamp():
     """
@@ -100,42 +103,144 @@ def XD(y, e, amplitudes, means, covariances, *args, **kwargs):
     c = np.asfortranarray(covariances)
     y = np.asfortranarray(y)
     e = np.asfortranarray(e)
-    L = xd(y, e, a, m, c, *args, **kwargs)
+    L = xd.extreme_deconvolution(y, e, a, m, c, *args, **kwargs)
 
     order = a.argsort()[::-1] # descending order of amplitude
     a = a[order] ; m = m[order] ; c = c[order]
 
     return a, m, c, L
 
-def add_rad(t, col):
-    print "Transforming to radians for.. ", col
-    col_rad = np.radians(t[col]/3.6e6) ; col_rad.name = col + "_rad"
-    col_rad_err = np.radians(t[col+"_error"]/3.6e6) ; col_rad_err.name = col + "_rad_error"
-    t.add_columns((col_rad, col_rad_err))
+def calc_AIC(lL,comp,N,D,Kmax):
+    return -2./N*(N-1.-D-Kmax/2.)*lL+3*comp*D
+
+def calc_MDL(lL,comp,N,D):
+    return -lL + comp*D*np.log2(N)/2.
+
+def perform_XD(xarr, xcovar, project, initamps, initmeans, initcovs, wr, Kr, N):
+    dim = 3
+    logL = np.tile(np.nan, (len(Kr), len(wr)))
+    AIC = np.tile(np.nan, (len(Kr), len(wr)))
+    MDL = np.tile(np.nan, (len(Kr), len(wr)))
+    max_logL = -1e15 ; min_AIC = 1e15 ; min_MDL = 1e15
+    for k in Kr:
+        print(k)
+        for w in range(len(wr)):
+            a_xd, m_xd, c_xd, logL[k-1,w] = XD(xarr, xcovar, initamps[k-1], initmeans[k-1], initcovs[k-1], projection=project, w=wr[w]) #extreme deconvolution
+            logL[k-1,w] *= N
+            AIC[k-1,w] = calc_AIC(logL[k-1,w],k,N,dim,max(Kr))
+            MDL[k-1,w] = calc_MDL(logL[k-1,w],k,N,dim)
+            if logL[k-1,w] > max_logL:
+                max_logL = logL[k-1,w]
+                bestK_logL = k ; bestw_logL = wr[w]
+                a_logL = a_xd ; m_logL = m_xd ; c_logL = c_xd
+            if AIC[k-1,w] < min_AIC:
+                min_AIC = AIC[k-1,w]
+                bestK_AIC = k ; bestw_AIC = wr[w]
+                a_AIC = a_xd ; m_AIC = m_xd ; c_AIC = c_xd
+            if MDL[k-1,w] < min_MDL:
+                min_MDL = MDL[k-1,w]
+                bestK_MDL = k ; bestw_MDL = wr[w]
+                a_MDL = a_xd ; m_MDL = m_xd ; c_MDL = c_xd
+    a_test = (a_logL, a_AIC, a_MDL)
+    m_test = (m_logL, m_AIC, m_MDL)
+    c_test = (c_logL, c_AIC, c_MDL)
+    bestK = (bestK_logL, bestK_AIC, bestK_MDL)
+    bestw = (bestw_logL, bestw_AIC, bestw_MDL)
+    if len(a_test[0]) != bestK[0]: print("Error! The amount of components predicted by XD ", len(a_test[0]), " is not equal to ", bestK[0], " the amount of components calculated.")
+    return logL, AIC, MDL, a_test, m_test, c_test, bestK, bestw
+
+def add_rad(t, col, unit, errunit):
+    print("Transforming to radians for.. ", col)
+    col_rad = Angle(t[col], unit).radian 
+    col_rad_err = Angle(t[col+"_error"], errunit).radian
+    t.add_column(table.Column(col_rad, col + '_rad'))
+    t.add_column(table.Column(col_rad_err, col + '_rad_error'))
 
 def r(x, y, z):
     return np.sqrt(x**2 + y**2 + z**2)
 
-def radial_velocity_distribution(PDFs, ra, dec, plx, mura, mudec, C, x = np.arange(-500., 500., 0.0025), v_r_err = 0.):
+def radial_velocity_distribution(PDFs, ra, dec, plx, mura, mudec, covs, vrad_err = 0.):
+    vradmin = -750.0
+    vradmax = 750.0
+    
+    p_vrad_marg = []
+    p_vrad_cond = []
+    p_vrad_cond_temp = []
+        
+    l, b = ICRS2gal.transformSkyCoordinates(ra, dec)
+    pml, pmb = ICRS2gal.transformProperMotions(ra, dec, mura, mudec)
+    cov_gal = ICRS2gal.transformCovarianceMatrix(ra, dec, covs)
+    
+    jacobian = np.array([[-pml*A_v/plx**2., A_v/plx, 0.],
+                      [-pmb*A_v/plx**2., 0., A_v/plx]])
+    cov_vtan = jacobian.dot(cov_gal[2:5,2:5]).dot(jacobian.T)
+    vtan_gal = np.array([pml*A_v/plx, pmb*A_v/plx])
+    
+    p_gal, q_gal, r_gal = normalTriad(l, b)
+    coordtrans = np.vstack((p_gal, q_gal, r_gal))
+    
+    for N in PDFs:
+        #Marginal distribution of vrad
+        mean_vrad_marg = r_gal.dot(N.mean)
+        sig_vrad_marg = np.sqrt(r_gal.dot(N.cov).dot(r_gal) + vrad_err**2.)
+        newPDF_marg = univariate(mean = mean_vrad_marg, sigma = sig_vrad_marg)
+        newPDF_marg.amp = N.amp
+        p_vrad_marg.append(newPDF_marg)
+        # Preparatory calculations for conditional distribution of vrad
+        mean_vl = p_gal.dot(N.mean)
+        mean_vb = q_gal.dot(N.mean)
+        mean_vtan = np.array([mean_vl, mean_vb])
+        # Calculate covariance matrix in pqr representation by transforming the xyz representation and add observational errors.
+        cov_pqr_gal = coordtrans.dot(N.cov).dot(coordtrans.T)
+        cov_pqr_gal[:2,:2] += cov_vtan
+        cov_pqr_gal[2,2] += vrad_err**2.
+        # Factor the covariance matrix.
+        A = cov_pqr_gal[:2,:2]
+        B = cov_pqr_gal[2,2]
+        C = cov_pqr_gal[2,:2]
+        Ainv = np.linalg.inv(A)
+        #Conditional distribution of vrad
+        mean_vrad_cond = mean_vrad_marg + C.dot(Ainv.dot(vtan_gal - mean_vtan))
+        sig_vrad_cond = np.sqrt(B - C.dot(Ainv).dot(C.T))
+        newPDF_cond = sp.norm(loc=mean_vrad_cond, scale=sig_vrad_cond)
+        newPDF_cond.A = A
+        newPDF_cond.mean_vtan = mean_vtan
+        prob_vtan_gal = N.amp * sp.multivariate_normal.pdf(vtan_gal, mean = mean_vtan, cov = A)
+        newPDF_cond.prob_vtan_gal = prob_vtan_gal
+        p_vrad_cond_temp.append(newPDF_cond)
+        
+    prob_vtan_gal = np.sum(N_cond.prob_vtan_gal for N_cond in p_vrad_cond_temp)
+    
+    # Conditional distribution of vrad, properly normalized.
+    for N, N_cond in zip(PDFs, p_vrad_cond_temp):
+        N_cond.q = N.amp * sp.multivariate_normal.pdf(vtan_gal, mean = N_cond.mean_vtan, cov = N_cond.A) / prob_vtan_gal
+        p_vrad_cond.append(N_cond)
+    
+    
+    x = np.arange(vradmin, vradmax, 0.0025)     
+    p_m = np.array([N_marg.amp * N_marg.pdf(x) for N_marg in p_vrad_marg]).sum(axis=0)
+    p_c = np.array([N_cond.q * N_cond.pdf(x) for N_cond in p_vrad_cond]).sum(axis=0)
+    
+
+def radial_velocity_distribution_Olivier(PDFs, ra, dec, plx, mura, mudec, C, x = np.arange(-500., 500., 0.0025), v_r_err = 0.):
 
     p_vr_M = []
     p_vr_C = []
     p_vr_C_temp = []
 
-    ICRS_to_galactic = coords.CoordinateTransformation(coords.Transformations.ICRS2GAL)
-    l, b = ICRS_to_galactic.transformSkyCoordinates(ra, dec)
+    l, b = ICRS2gal.transformSkyCoordinates(ra, dec)
     pml, pmb = ICRS_to_galactic.transformProperMotions(ra, dec, mura,mudec)
     C_gal = ICRS_to_galactic.transformCovarianceMatrix(ra, dec, C)
-    jacobian = array([[-pml * k/plx**2., k/plx, 0.   ],
-                     [-pmb * k/plx**2., 0.   , k/plx]])
+    jacobian = array([[-pml * A_v/plx**2., A_v/plx, 0.   ],
+                     [-pmb * A_v/plx**2., 0.   , A_v/plx]])
     cov_v_tan = jacobian.dot(C_gal[2:5,2:5]).dot(jacobian.T)
-    v_t_gal = array([pml*k/plx, pmb*k/plx])
+    v_t_gal = array([pml*A_v/plx, pmb*A_v/plx])
     p_gal, q_gal, r_gal = normalTriad(l, b)
     coordtrans = np.vstack((p_gal, q_gal, r_gal))
     for N in PDFs:
         mean_v_rad_M = r_gal.dot(N.mean)
         sig_v_rad_M  = np.sqrt(r_gal.dot(N.cov).dot(r_gal) + v_r_err**2.)
-        newPDF_M = univariate(mean = mean_v_rad_M, sigma = sig_v_rad_M)
+        newPDF_M = norm(loc = mean_v_rad_M, scale = sig_v_rad_M)
         newPDF_M.amp = N.amp
         p_vr_M.append(newPDF_M)
 
